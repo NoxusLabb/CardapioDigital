@@ -4,10 +4,62 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertProductSchema, insertCategorySchema } from "@shared/schema";
 import { z } from "zod";
+import { authenticateJWT, requireAdmin, generateToken } from "./jwt";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup authentication routes and middleware
+  // Setup authentication routes and middleware (session-based auth)
   setupAuth(app);
+  
+  // JWT Authentication endpoints para o dashboard admin
+  app.post("/api/auth/login", async (req, res, next) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Nome de usuário e senha são obrigatórios" });
+      }
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ message: "Credenciais inválidas" });
+      }
+      
+      // Verificação de senha
+      const valid = await (await import('./auth')).comparePasswords(password, user.password);
+      
+      if (!valid) {
+        return res.status(401).json({ message: "Credenciais inválidas" });
+      }
+      
+      // Gerar token JWT
+      const token = generateToken(user);
+      
+      // Retornar usuário e token
+      res.json({
+        user: {
+          id: user.id,
+          username: user.username,
+          isAdmin: user.isAdmin
+        },
+        token
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  app.get("/api/auth/me", authenticateJWT, (req, res) => {
+    // TypeScript não detecta que o middleware authenticateJWT já garante que req.user está definido
+    if (!req.user) {
+      return res.status(401).json({ message: "Não autenticado" });
+    }
+    
+    res.json({
+      id: req.user.id,
+      username: req.user.username,
+      isAdmin: req.user.isAdmin
+    });
+  });
   
   // Public API routes
 
@@ -77,6 +129,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin API routes (protected)
+  // Middleware para proteger todas as rotas administrativas
+  app.use('/api/admin', authenticateJWT, requireAdmin);
 
   // Create a new product
   app.post("/api/admin/products", async (req, res, next) => {
