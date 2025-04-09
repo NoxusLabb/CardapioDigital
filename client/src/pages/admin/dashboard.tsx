@@ -27,18 +27,28 @@ import {
 import { productsAPI } from '../../utils/api';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { useLocation } from 'wouter';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 import { formatCurrency } from '@/utils/formatCurrency';
 
 interface Produto {
-  _id: string;
-  nome: string;
-  descricao: string;
-  preco: number;
-  categoria: string;
-  imagemUrl: string;
-  disponivel: boolean;
-  ingredientes: string[];
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  imageUrl: string;
+  available: boolean;
+  ingredients: string[];
+  
+  // Para compatibilidade com código existente
+  _id?: string;
+  nome?: string;
+  descricao?: string;
+  preco?: number;
+  categoria?: string;
+  imagemUrl?: string;
+  disponivel?: boolean;
+  ingredientes?: string[];
 }
 
 export default function DashboardPage() {
@@ -69,25 +79,65 @@ export default function DashboardPage() {
 
   // Calcular estatísticas
   const calcularEstatisticas = () => {
-    const totalProdutos = produtos.length;
-    const produtosAtivos = produtos.filter(p => p.disponivel).length;
+    // Verificações de segurança para evitar erros
+    if (!produtos || !Array.isArray(produtos) || produtos.length === 0) {
+      return {
+        totalProdutos: 0,
+        produtosAtivos: 0,
+        totalCategorias: 0,
+        categorias: [],
+        produtosMaisCaros: [],
+      };
+    }
     
-    // Agrupar por categoria
-    const categorias = [...new Set(produtos.map(p => p.categoria))];
-    const totalCategorias = categorias.length;
-    
-    // Produtos mais caros
-    const produtosMaisCaros = [...produtos]
-      .sort((a, b) => b.preco - a.preco)
-      .slice(0, 5);
-    
-    return {
-      totalProdutos,
-      produtosAtivos,
-      totalCategorias,
-      categorias,
-      produtosMaisCaros,
-    };
+    try {
+      const totalProdutos = produtos.length;
+      
+      // Usar o campo "available" ou "disponivel" conforme disponível
+      const produtosAtivos = produtos.filter(p => p && (p.available || p.disponivel)).length;
+      
+      // Agrupar por categoria (com verificação de segurança)
+      const categoriasSet = new Set();
+      produtos.forEach(p => {
+        // Usar "category" ou "categoria" conforme disponível
+        const categoria = p.category || p.categoria;
+        if (p && categoria) categoriasSet.add(categoria);
+      });
+      const categorias = Array.from(categoriasSet) as string[];
+      const totalCategorias = categorias.length;
+      
+      // Produtos mais caros (com verificação de segurança)
+      const produtosMaisCaros = [...produtos]
+        .filter(p => {
+          // Usar "price" ou "preco" conforme disponível
+          const preco = p.price !== undefined ? p.price : p.preco;
+          return p && typeof preco === 'number';
+        })
+        .sort((a, b) => {
+          // Usar "price" ou "preco" conforme disponível
+          const precoA = a.price !== undefined ? a.price : a.preco;
+          const precoB = b.price !== undefined ? b.price : b.preco;
+          return precoB - precoA;
+        })
+        .slice(0, 5);
+      
+      return {
+        totalProdutos,
+        produtosAtivos,
+        totalCategorias,
+        categorias,
+        produtosMaisCaros,
+      };
+    } catch (error) {
+      console.error("Erro ao calcular estatísticas:", error);
+      return {
+        totalProdutos: 0,
+        produtosAtivos: 0,
+        totalCategorias: 0,
+        categorias: [],
+        produtosMaisCaros: [],
+      };
+    }
   };
 
   const navegarParaProdutos = () => {
@@ -236,7 +286,7 @@ export default function DashboardPage() {
                     Produtos Ativos
                   </Typography>
                   <Typography variant="h6" fontWeight="bold">
-                    {Math.round((produtosAtivos / totalProdutos) * 100)}%
+                    {totalProdutos > 0 ? Math.round((produtosAtivos / totalProdutos) * 100) : 0}%
                   </Typography>
                 </Box>
                 <Divider orientation="vertical" flexItem />
@@ -246,7 +296,11 @@ export default function DashboardPage() {
                   </Typography>
                   <Typography variant="h6" fontWeight="bold">
                     {formatCurrency(
-                      produtos.reduce((acc, curr) => acc + curr.preco, 0) / totalProdutos
+                      totalProdutos > 0 ? (produtos.reduce((acc, curr) => {
+                        // Usar price ou preco conforme disponível
+                        const preco = curr.price !== undefined ? curr.price : curr.preco;
+                        return acc + (preco || 0);
+                      }, 0) / totalProdutos) : 0
                     )}
                   </Typography>
                 </Box>
@@ -256,9 +310,13 @@ export default function DashboardPage() {
                     Média Ingredientes
                   </Typography>
                   <Typography variant="h6" fontWeight="bold">
-                    {Math.round(
-                      produtos.reduce((acc, curr) => acc + curr.ingredientes.length, 0) / totalProdutos
-                    )}
+                    {totalProdutos > 0 ? Math.round(
+                      produtos.reduce((acc, curr) => {
+                        // Usar ingredients ou ingredientes conforme disponível
+                        const ingredientes = curr.ingredients || curr.ingredientes || [];
+                        return acc + (ingredientes ? ingredientes.length : 0);
+                      }, 0) / totalProdutos
+                    ) : 0}
                   </Typography>
                 </Box>
               </Box>
@@ -285,7 +343,11 @@ export default function DashboardPage() {
             
             <Grid container spacing={1}>
               {categorias.map((categoria) => {
-                const produtosNaCategoria = produtos.filter(p => p.categoria === categoria).length;
+                // Verificar category ou categoria conforme disponível
+                const produtosNaCategoria = produtos.filter(p => {
+                  const cat = p.category || p.categoria;
+                  return cat === categoria;
+                }).length;
                 return (
                   <Grid item xs={6} key={categoria}>
                     <Card variant="outlined" sx={{ mb: 1 }}>
@@ -321,41 +383,51 @@ export default function DashboardPage() {
             <Divider sx={{ mb: 2 }} />
             
             <List>
-              {produtosMaisCaros.map((produto) => (
-                <React.Fragment key={produto._id}>
-                  <ListItem alignItems="flex-start">
-                    <ListItemAvatar>
-                      <Avatar 
-                        alt={produto.nome} 
-                        src={produto.imagemUrl}
-                        variant="rounded"
-                        sx={{ width: 50, height: 50 }}
+              {produtosMaisCaros.map((produto) => {
+                // Usar os campos na nomenclatura nova ou antiga conforme disponível
+                const id = produto.id || produto._id;
+                const nome = produto.name || produto.nome || "";
+                const imagemUrl = produto.imageUrl || produto.imagemUrl || "";
+                const preco = produto.price !== undefined ? produto.price : produto.preco || 0;
+                const categoria = produto.category || produto.categoria || "";
+                const disponivel = produto.available !== undefined ? produto.available : produto.disponivel || false;
+                
+                return (
+                  <React.Fragment key={id || Math.random().toString()}>
+                    <ListItem alignItems="flex-start">
+                      <ListItemAvatar>
+                        <Avatar 
+                          alt={nome}
+                          src={imagemUrl}
+                          variant="rounded"
+                          sx={{ width: 50, height: 50 }}
+                        />
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={nome}
+                        secondary={
+                          <React.Fragment>
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              color="text.primary"
+                            >
+                              {formatCurrency(preco)}
+                            </Typography>
+                            {" — "}{categoria}
+                          </React.Fragment>
+                        }
                       />
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={produto.nome}
-                      secondary={
-                        <React.Fragment>
-                          <Typography
-                            component="span"
-                            variant="body2"
-                            color="text.primary"
-                          >
-                            {formatCurrency(produto.preco)}
-                          </Typography>
-                          {" — "}{produto.categoria}
-                        </React.Fragment>
-                      }
-                    />
-                    <Chip 
-                      label={produto.disponivel ? "Disponível" : "Indisponível"} 
-                      color={produto.disponivel ? "success" : "error"} 
-                      size="small" 
-                    />
-                  </ListItem>
-                  <Divider variant="inset" component="li" />
-                </React.Fragment>
-              ))}
+                      <Chip 
+                        label={disponivel ? "Disponível" : "Indisponível"} 
+                        color={disponivel ? "success" : "error"} 
+                        size="small" 
+                      />
+                    </ListItem>
+                    <Divider variant="inset" component="li" />
+                  </React.Fragment>
+                );
+              })}
             </List>
           </Paper>
         </Grid>

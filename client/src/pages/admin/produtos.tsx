@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import { productsAPI } from '../../utils/api';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 import ProdutosTable from '../../components/admin/ProdutosTable';
 import ProdutoForm from '../../components/admin/ProdutoForm';
 import { useToast } from '@/hooks/use-toast';

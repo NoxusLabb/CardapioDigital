@@ -25,7 +25,7 @@ import {
   Category
 } from '@mui/icons-material';
 import { Link, useLocation } from 'wouter';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 
 const drawerWidth = 240;
 
@@ -35,7 +35,7 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children, title }: AdminLayoutProps) {
-  const { logout, user } = useAuth();
+  const { logoutMutation, user } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -46,7 +46,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   };
 
   const handleLogout = () => {
-    logout();
+    logoutMutation.mutate();
     navigate('/admin/login');
   };
 
@@ -129,7 +129,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             {title}
           </Typography>
           <Typography variant="body1" sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
-            {user?.nome}
+            {user?.username}
           </Typography>
           <Button 
             color="inherit" 

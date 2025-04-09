@@ -50,23 +50,23 @@ export const authAPI = {
 // Funções de produtos
 export const productsAPI = {
   getAll: async () => {
-    const response = await api.get('/produtos');
+    const response = await api.get('/products');
     return response.data;
   },
   getById: async (id: string) => {
-    const response = await api.get(`/produtos/${id}`);
+    const response = await api.get(`/products/${id}`);
     return response.data;
   },
   create: async (productData: any) => {
-    const response = await api.post('/produtos', productData);
+    const response = await api.post('/products', productData);
     return response.data;
   },
   update: async (id: string, productData: any) => {
-    const response = await api.put(`/produtos/${id}`, productData);
+    const response = await api.put(`/products/${id}`, productData);
     return response.data;
   },
   delete: async (id: string) => {
-    const response = await api.delete(`/produtos/${id}`);
+    const response = await api.delete(`/products/${id}`);
     return response.data;
   },
 };
