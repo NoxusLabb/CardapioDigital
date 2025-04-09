@@ -1,31 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Grid,
-  FormControlLabel,
-  Switch,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
-  Autocomplete,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
-  InputAdornment,
-} from '@mui/material';
-import { Close } from '@mui/icons-material';
+import { X, DollarSign, Percent, Weight, Hash } from 'lucide-react';
 
-interface Ingrediente {
-  id: number;
-  nome: string;
-}
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 
 interface Produto {
   _id?: string;
@@ -77,7 +60,7 @@ export default function ProdutoForm({
   onClose,
   onSubmit,
   produto,
-  categorias,
+  categorias = [],
 }: ProdutoFormProps) {
   const [formData, setFormData] = useState<Produto>(defaultProduto);
   const [erros, setErros] = useState<Record<string, string>>({});
@@ -108,18 +91,17 @@ export default function ProdutoForm({
     }
   };
 
-  const handleSwitchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name } = e.target;
+  const handleSwitchChange = (name: string, checked: boolean) => {
     setFormData({
       ...formData,
-      [name]: e.target.checked,
+      [name]: checked,
     });
   };
 
-  const handleSelectChange = (e: any) => {
+  const handleSelectChange = (value: string) => {
     setFormData({
       ...formData,
-      categoria: e.target.value,
+      categoria: value,
     });
     
     // Limpar erro do campo categoria
@@ -149,7 +131,7 @@ export default function ProdutoForm({
     }
   };
 
-  const handleIngredienteChange = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleIngredienteChange = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && novoIngrediente.trim() !== '') {
       e.preventDefault();
       
@@ -173,7 +155,7 @@ export default function ProdutoForm({
     });
   };
   
-  const handleTagChange = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleTagChange = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && novaTag.trim() !== '') {
       e.preventDefault();
       
@@ -239,293 +221,285 @@ export default function ProdutoForm({
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="md" 
-      fullWidth
-      aria-labelledby="form-dialog-title"
-    >
-      <DialogTitle id="form-dialog-title">
-        {produto && produto._id ? 'Editar Produto' : 'Novo Produto'}
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={{
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
-          }}
-        >
-          <Close />
-        </IconButton>
-      </DialogTitle>
+    <Dialog open={open} onOpenChange={() => onClose()}>
+      <DialogHeader>
+        <DialogTitle>
+          {produto && produto._id ? 'Editar Produto' : 'Novo Produto'}
+        </DialogTitle>
+      </DialogHeader>
       
-      <DialogContent dividers>
-        <Box component="form" onSubmit={handleSubmit} noValidate>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Nome"
+      <DialogContent className="max-h-[80vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome</Label>
+              <Input
+                id="nome"
                 name="nome"
                 value={formData.nome}
                 onChange={handleChange}
-                error={!!erros.nome}
-                helperText={erros.nome}
+                className={erros.nome ? "border-destructive" : ""}
                 required
-                margin="normal"
               />
-            </Grid>
+              {erros.nome && (
+                <p className="text-sm text-destructive">{erros.nome}</p>
+              )}
+            </div>
             
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth margin="normal" error={!!erros.categoria}>
-                <InputLabel id="categoria-label">Categoria</InputLabel>
-                <Select
-                  labelId="categoria-label"
-                  name="categoria"
-                  value={formData.categoria}
-                  onChange={handleSelectChange}
-                  label="Categoria"
+            <div className="space-y-2">
+              <Label htmlFor="categoria">Categoria</Label>
+              <Select
+                value={formData.categoria}
+                onValueChange={handleSelectChange}
+                required
+              >
+                <SelectTrigger id="categoria" className={erros.categoria ? "border-destructive" : ""}>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categorias && categorias.length > 0 ? (
+                    categorias.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="semCategoria">Sem categorias disponíveis</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              {erros.categoria && (
+                <p className="text-sm text-destructive">{erros.categoria}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="descricao">Descrição</Label>
+            <Textarea
+              id="descricao"
+              name="descricao"
+              value={formData.descricao}
+              onChange={handleChange}
+              rows={4}
+              className={erros.descricao ? "border-destructive" : ""}
+              required
+            />
+            {erros.descricao && (
+              <p className="text-sm text-destructive">{erros.descricao}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="preco">Preço</Label>
+              <div className="relative">
+                <DollarSign className="h-4 w-4 absolute left-2 top-3 text-muted-foreground" />
+                <Input
+                  id="preco"
+                  name="preco"
+                  type="number"
+                  value={formData.preco}
+                  onChange={handleNumberChange}
+                  step="0.01"
+                  min="0"
+                  className={`pl-8 ${erros.preco ? "border-destructive" : ""}`}
                   required
-                >
-                  {categorias.map((cat) => (
-                    <MenuItem key={cat} value={cat}>
-                      {cat}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {erros.categoria && (
-                  <Typography variant="caption" color="error">
-                    {erros.categoria}
-                  </Typography>
-                )}
-              </FormControl>
-            </Grid>
+                />
+              </div>
+              {erros.preco && (
+                <p className="text-sm text-destructive">{erros.preco}</p>
+              )}
+            </div>
             
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Descrição"
-                name="descricao"
-                value={formData.descricao}
-                onChange={handleChange}
-                error={!!erros.descricao}
-                helperText={erros.descricao}
-                required
-                multiline
-                rows={4}
-                margin="normal"
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Preço"
-                name="preco"
-                type="number"
-                value={formData.preco}
-                onChange={handleNumberChange}
-                error={!!erros.preco}
-                helperText={erros.preco}
-                required
-                inputProps={{ min: "0", step: "0.01" }}
-                margin="normal"
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">R$</InputAdornment>,
-                }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="URL da Imagem"
+            <div className="space-y-2">
+              <Label htmlFor="imagemUrl">URL da Imagem</Label>
+              <Input
+                id="imagemUrl"
                 name="imagemUrl"
                 value={formData.imagemUrl}
                 onChange={handleChange}
-                error={!!erros.imagemUrl}
-                helperText={erros.imagemUrl}
+                className={erros.imagemUrl ? "border-destructive" : ""}
                 required
-                margin="normal"
               />
-            </Grid>
-            
-            <Grid item xs={12}>
-              <Box mb={1}>
-                <Typography variant="subtitle1">Ingredientes:</Typography>
-              </Box>
-              <TextField
-                fullWidth
-                label="Adicionar ingrediente (pressione Enter)"
-                value={novoIngrediente}
-                onChange={(e) => setNovoIngrediente(e.target.value)}
-                onKeyDown={handleIngredienteChange}
-                margin="normal"
-              />
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
-                {formData.ingredientes.map((ingrediente) => (
-                  <Chip
-                    key={ingrediente}
-                    label={ingrediente}
-                    onDelete={() => handleIngredienteDelete(ingrediente)}
-                    color="primary"
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Preço de Custo"
-                name="precoCusto"
-                type="number"
-                value={formData.precoCusto}
-                onChange={handleNumberChange}
-                inputProps={{ min: "0", step: "0.01" }}
-                margin="normal"
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">R$</InputAdornment>,
-                }}
-              />
-            </Grid>
+              {erros.imagemUrl && (
+                <p className="text-sm text-destructive">{erros.imagemUrl}</p>
+              )}
+            </div>
+          </div>
 
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Desconto (%)"
-                name="descontoPercentual"
-                type="number"
-                value={formData.descontoPercentual}
-                onChange={handleNumberChange}
-                inputProps={{ min: "0", max: "100", step: "1" }}
-                margin="normal"
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Quantidade em Estoque"
-                name="estoqueQuantidade"
-                type="number"
-                value={formData.estoqueQuantidade}
-                onChange={handleNumberChange}
-                inputProps={{ min: "0", step: "1" }}
-                margin="normal"
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Estoque Mínimo"
-                name="estoqueMinimo"
-                type="number"
-                value={formData.estoqueMinimo}
-                onChange={handleNumberChange}
-                inputProps={{ min: "0", step: "1" }}
-                margin="normal"
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Peso (g)"
-                name="peso"
-                type="number"
-                value={formData.peso}
-                onChange={handleNumberChange}
-                inputProps={{ min: "0", step: "1" }}
-                margin="normal"
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">g</InputAdornment>,
-                }}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', mt: 2, gap: 1 }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formData.disponivel}
-                      onChange={handleSwitchChange}
-                      name="disponivel"
-                      color="primary"
-                    />
-                  }
-                  label="Disponível"
-                />
-                
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formData.destaque}
-                      onChange={handleSwitchChange}
-                      name="destaque"
-                      color="primary"
-                    />
-                  }
-                  label="Produto em Destaque"
-                />
-              </Box>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <Box mb={1}>
-                <Typography variant="subtitle1">Tags:</Typography>
-              </Box>
-              <TextField
-                fullWidth
-                label="Adicionar tag (pressione Enter)"
-                value={novaTag}
-                onChange={(e) => setNovaTag(e.target.value)}
-                onKeyDown={handleTagChange}
-                margin="normal"
-              />
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
-                {formData.tags.map((tag) => (
-                  <Chip
-                    key={tag}
-                    label={tag}
-                    onDelete={() => handleTagDelete(tag)}
-                    color="secondary"
-                    variant="outlined"
+          <div className="space-y-2">
+            <Label>Ingredientes</Label>
+            <Input
+              placeholder="Adicionar ingrediente (pressione Enter)"
+              value={novoIngrediente}
+              onChange={(e) => setNovoIngrediente(e.target.value)}
+              onKeyDown={handleIngredienteChange}
+            />
+            <div className="flex flex-wrap gap-2 mt-2">
+              {formData.ingredientes.map((ingrediente) => (
+                <Badge 
+                  key={ingrediente} 
+                  variant="outline"
+                  className="px-3 py-1"
+                >
+                  {ingrediente}
+                  <X 
+                    className="h-3 w-3 ml-1 cursor-pointer" 
+                    onClick={() => handleIngredienteDelete(ingrediente)}
                   />
-                ))}
-              </Box>
-            </Grid>
-          </Grid>
-        </Box>
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="precoCusto">Preço de Custo</Label>
+              <div className="relative">
+                <DollarSign className="h-4 w-4 absolute left-2 top-3 text-muted-foreground" />
+                <Input
+                  id="precoCusto"
+                  name="precoCusto"
+                  type="number"
+                  value={formData.precoCusto}
+                  onChange={handleNumberChange}
+                  step="0.01"
+                  min="0"
+                  className="pl-8"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="descontoPercentual">Desconto</Label>
+              <div className="relative">
+                <Percent className="h-4 w-4 absolute left-2 top-3 text-muted-foreground" />
+                <Input
+                  id="descontoPercentual"
+                  name="descontoPercentual"
+                  type="number"
+                  value={formData.descontoPercentual}
+                  onChange={handleNumberChange}
+                  step="1"
+                  min="0"
+                  max="100"
+                  className="pl-8"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="estoqueQuantidade">Quantidade em Estoque</Label>
+              <div className="relative">
+                <Hash className="h-4 w-4 absolute left-2 top-3 text-muted-foreground" />
+                <Input
+                  id="estoqueQuantidade"
+                  name="estoqueQuantidade"
+                  type="number"
+                  value={formData.estoqueQuantidade}
+                  onChange={handleNumberChange}
+                  step="1"
+                  min="0"
+                  className="pl-8"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="estoqueMinimo">Estoque Mínimo</Label>
+              <div className="relative">
+                <Hash className="h-4 w-4 absolute left-2 top-3 text-muted-foreground" />
+                <Input
+                  id="estoqueMinimo"
+                  name="estoqueMinimo"
+                  type="number"
+                  value={formData.estoqueMinimo}
+                  onChange={handleNumberChange}
+                  step="1"
+                  min="0"
+                  className="pl-8"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="peso">Peso (g)</Label>
+              <div className="relative">
+                <Weight className="h-4 w-4 absolute left-2 top-3 text-muted-foreground" />
+                <Input
+                  id="peso"
+                  name="peso"
+                  type="number"
+                  value={formData.peso}
+                  onChange={handleNumberChange}
+                  step="1"
+                  min="0"
+                  className="pl-8"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4 flex flex-col justify-center py-2">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="disponivel"
+                  checked={formData.disponivel}
+                  onCheckedChange={(checked) => handleSwitchChange('disponivel', checked)}
+                />
+                <Label htmlFor="disponivel">Disponível</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="destaque"
+                  checked={formData.destaque}
+                  onCheckedChange={(checked) => handleSwitchChange('destaque', checked)}
+                />
+                <Label htmlFor="destaque">Produto em Destaque</Label>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Tags</Label>
+            <Input
+              placeholder="Adicionar tag (pressione Enter)"
+              value={novaTag}
+              onChange={(e) => setNovaTag(e.target.value)}
+              onKeyDown={handleTagChange}
+            />
+            <div className="flex flex-wrap gap-2 mt-2">
+              {formData.tags.map((tag) => (
+                <Badge 
+                  key={tag} 
+                  variant="secondary"
+                  className="px-3 py-1"
+                >
+                  {tag}
+                  <X 
+                    className="h-3 w-3 ml-1 cursor-pointer" 
+                    onClick={() => handleTagDelete(tag)}
+                  />
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </form>
       </DialogContent>
       
-      <DialogActions>
-        <Button onClick={onClose} color="inherit">
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose}>
           Cancelar
         </Button>
-        <Button 
-          onClick={handleSubmit} 
-          color="primary" 
-          variant="contained"
-          sx={{ 
-            backgroundColor: '#FF5A5F',
-            '&:hover': {
-              backgroundColor: '#E04B50',
-            },
-          }}
-        >
+        <Button onClick={handleSubmit}>
           {produto && produto._id ? 'Atualizar' : 'Criar'}
         </Button>
-      </DialogActions>
+      </DialogFooter>
     </Dialog>
   );
 }

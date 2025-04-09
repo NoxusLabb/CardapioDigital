@@ -1,25 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import {
-  DataGrid,
-  GridColDef,
-  GridRenderCellParams,
-  GridToolbar,
-} from '@mui/x-data-grid';
-import {
-  Box,
-  Button,
-  Chip,
-  IconButton,
-  Tooltip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Typography,
-} from '@mui/material';
-import { Edit, Delete, Visibility } from '@mui/icons-material';
+import { Eye, Pencil, Trash2, Search, ArrowUpDown } from 'lucide-react';
 import { formatCurrency } from '@/utils/formatCurrency';
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Interface para os produtos vindos da API (Drizzle)
 interface DrizzleProduct {
@@ -73,6 +80,11 @@ export default function ProdutosTable({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [produtoToDelete, setProdutoToDelete] = useState<string | null>(null);
   const [produtosFormatados, setProdutosFormatados] = useState<ProdutoUI[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof ProdutoUI | null;
+    direction: 'asc' | 'desc';
+  }>({ key: null, direction: 'asc' });
 
   // Formatar produtos para interface UI
   useEffect(() => {
@@ -121,130 +133,191 @@ export default function ProdutosTable({
     setProdutoToDelete(null);
   };
 
-  const columns: GridColDef[] = [
-    {
-      field: 'imagemUrl',
-      headerName: 'Imagem',
-      width: 100,
-      renderCell: (params: GridRenderCellParams) => (
-        <Box
-          component="img"
-          sx={{
-            height: 50,
-            width: 50,
-            borderRadius: '4px',
-            objectFit: 'cover',
-          }}
-          alt={params.row.nome}
-          src={params.row.imagemUrl}
-          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-            e.currentTarget.src = 'https://via.placeholder.com/50x50?text=Erro';
-          }}
-        />
-      ),
-    },
-    { field: 'nome', headerName: 'Nome', flex: 1, minWidth: 150 },
-    { field: 'categoria', headerName: 'Categoria', width: 130 },
-    {
-      field: 'preco',
-      headerName: 'Preço',
-      width: 110,
-      valueFormatter: (params) => formatCurrency(params.value),
-    },
-    {
-      field: 'disponivel',
-      headerName: 'Disponível',
-      width: 120,
-      renderCell: (params: GridRenderCellParams) => (
-        <Chip
-          label={params.value ? 'Sim' : 'Não'}
-          color={params.value ? 'success' : 'error'}
-          size="small"
-        />
-      ),
-    },
-    {
-      field: 'acoes',
-      headerName: 'Ações',
-      width: 150,
-      sortable: false,
-      renderCell: (params: GridRenderCellParams) => (
-        <Box>
-          <Tooltip title="Visualizar">
-            <IconButton
-              onClick={() => onView(params.row)}
-              size="small"
-              color="primary"
-            >
-              <Visibility fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Editar">
-            <IconButton
-              onClick={() => onEdit(params.row)}
-              size="small"
-              color="secondary"
-            >
-              <Edit fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Excluir">
-            <IconButton
-              onClick={() => handleDeleteClick(params.row._id)}
-              size="small"
-              color="error"
-            >
-              <Delete fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      ),
-    },
-  ];
+  const handleSort = (key: keyof ProdutoUI) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const filteredProducts = produtosFormatados.filter(produto => 
+    produto.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    produto.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    produto.descricao.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (!sortConfig.key) return 0;
+    
+    const valueA = a[sortConfig.key];
+    const valueB = b[sortConfig.key];
+    
+    if (valueA === valueB) return 0;
+    
+    // Handle string comparison
+    if (typeof valueA === 'string' && typeof valueB === 'string') {
+      const result = valueA.localeCompare(valueB);
+      return sortConfig.direction === 'asc' ? result : -result;
+    }
+    
+    // Handle number comparison
+    if (typeof valueA === 'number' && typeof valueB === 'number') {
+      const result = valueA < valueB ? -1 : 1;
+      return sortConfig.direction === 'asc' ? result : -result;
+    }
+    
+    // Handle boolean comparison
+    if (typeof valueA === 'boolean' && typeof valueB === 'boolean') {
+      const result = valueA === valueB ? 0 : valueA ? -1 : 1;
+      return sortConfig.direction === 'asc' ? result : -result;
+    }
+    
+    return 0;
+  });
 
   return (
-    <>
-      <Box sx={{ height: 'calc(100vh - 220px)', width: '100%' }}>
-        <DataGrid
-          rows={produtosFormatados}
-          getRowId={(row) => row._id}
-          columns={columns}
-          loading={loading}
-          autoPageSize
-          density="standard"
-          disableRowSelectionOnClick
-          slots={{ toolbar: GridToolbar }}
-          slotProps={{
-            toolbar: {
-              showQuickFilter: true,
-              quickFilterProps: { debounceMs: 500 },
-            },
-          }}
-          sx={{
-            backgroundColor: 'white',
-            borderRadius: 2,
-            '& .MuiDataGrid-columnHeaders': {
-              backgroundColor: '#f5f5f5',
-            },
-          }}
-        />
-      </Box>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Buscar produtos..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Imagem</TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('nome')}>
+                <div className="flex items-center space-x-1">
+                  <span>Nome</span>
+                  {sortConfig.key === 'nome' && (
+                    <ArrowUpDown className="h-4 w-4" />
+                  )}
+                </div>
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('categoria')}>
+                <div className="flex items-center space-x-1">
+                  <span>Categoria</span>
+                  {sortConfig.key === 'categoria' && (
+                    <ArrowUpDown className="h-4 w-4" />
+                  )}
+                </div>
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('preco')}>
+                <div className="flex items-center space-x-1">
+                  <span>Preço</span>
+                  {sortConfig.key === 'preco' && (
+                    <ArrowUpDown className="h-4 w-4" />
+                  )}
+                </div>
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('disponivel')}>
+                <div className="flex items-center space-x-1">
+                  <span>Disponível</span>
+                  {sortConfig.key === 'disponivel' && (
+                    <ArrowUpDown className="h-4 w-4" />
+                  )}
+                </div>
+              </TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  Carregando produtos...
+                </TableCell>
+              </TableRow>
+            ) : sortedProducts.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  Nenhum produto encontrado.
+                </TableCell>
+              </TableRow>
+            ) : (
+              sortedProducts.map((produto) => (
+                <TableRow key={produto._id}>
+                  <TableCell>
+                    <img
+                      src={produto.imagemUrl}
+                      alt={produto.nome}
+                      className="h-12 w-12 rounded-md object-cover"
+                      onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                        e.currentTarget.src = 'https://via.placeholder.com/50x50?text=Erro';
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">{produto.nome}</TableCell>
+                  <TableCell>{produto.categoria}</TableCell>
+                  <TableCell>{formatCurrency(produto.preco)}</TableCell>
+                  <TableCell>
+                    <Badge variant={produto.disponivel ? "success" : "destructive"}>
+                      {produto.disponivel ? 'Sim' : 'Não'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <span className="sr-only">Abrir menu</span>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onView(produto)}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          <span>Visualizar</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEdit(produto)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          <span>Editar</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteClick(produto._id)}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Excluir</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Diálogo de confirmação de exclusão */}
-      <Dialog open={deleteDialogOpen} onClose={handleCancelDelete}>
-        <DialogTitle>Confirmar exclusão</DialogTitle>
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
-          <DialogContentText>
-            Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.
-          </DialogContentText>
+          <DialogHeader>
+            <DialogTitle>Confirmar exclusão</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelDelete}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}>
+              Excluir
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete}>Cancelar</Button>
-          <Button onClick={handleConfirmDelete} color="error" autoFocus>
-            Excluir
-          </Button>
-        </DialogActions>
       </Dialog>
-    </>
+    </div>
   );
 }
