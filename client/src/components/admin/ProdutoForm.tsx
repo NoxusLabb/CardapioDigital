@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, DollarSign, Percent, Weight, Hash } from 'lucide-react';
 
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { FileUpload } from "@/components/ui/file-upload";
 
 interface Produto {
   _id?: string;
+  id?: number;
   nome: string;
   descricao: string;
   preco: number;
@@ -131,6 +133,20 @@ export default function ProdutoForm({
     }
   };
 
+  const handleImageChange = (base64: string) => {
+    setFormData({
+      ...formData,
+      imagemUrl: base64,
+    });
+    
+    if (erros.imagemUrl) {
+      setErros({
+        ...erros,
+        imagemUrl: '',
+      });
+    }
+  };
+
   const handleIngredienteChange = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && novoIngrediente.trim() !== '') {
       e.preventDefault();
@@ -198,14 +214,8 @@ export default function ProdutoForm({
       errors.categoria = 'Categoria é obrigatória';
     }
     
-    if (!formData.imagemUrl.trim()) {
-      errors.imagemUrl = 'URL da imagem é obrigatória';
-    } else {
-      try {
-        new URL(formData.imagemUrl);
-      } catch (e) {
-        errors.imagemUrl = 'URL da imagem é inválida';
-      }
+    if (!formData.imagemUrl) {
+      errors.imagemUrl = 'Imagem é obrigatória';
     }
     
     setErros(errors);
@@ -216,23 +226,44 @@ export default function ProdutoForm({
     e.preventDefault();
     
     if (validateForm()) {
-      onSubmit(formData);
+      // Converter para o formato esperado pela API
+      const produtoToSubmit = {
+        ...formData,
+        name: formData.nome,
+        description: formData.descricao,
+        price: formData.preco,
+        categoryId: categorias.indexOf(formData.categoria) + 1,
+        imageUrl: formData.imagemUrl,
+        available: formData.disponivel,
+        ingredients: formData.ingredientes,
+      };
+      
+      onSubmit(produtoToSubmit);
     }
   };
+
+  // Preparar os itens de categoria com ID numérico
+  const categoriasItems = categorias.map((cat, index) => ({
+    id: index + 1,
+    name: cat
+  }));
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>
       <DialogHeader>
         <DialogTitle>
-          {produto && produto._id ? 'Editar Produto' : 'Novo Produto'}
+          {produto && (produto._id || produto.id) ? 'Editar Produto' : 'Novo Produto'}
         </DialogTitle>
+        <DialogDescription>
+          Preencha os dados do produto abaixo. Os campos com * são obrigatórios.
+        </DialogDescription>
       </DialogHeader>
       
       <DialogContent className="max-h-[80vh] overflow-y-auto">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="nome">Nome</Label>
+              <Label htmlFor="nome">Nome *</Label>
               <Input
                 id="nome"
                 name="nome"
@@ -247,7 +278,7 @@ export default function ProdutoForm({
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="categoria">Categoria</Label>
+              <Label htmlFor="categoria">Categoria *</Label>
               <Select
                 value={formData.categoria}
                 onValueChange={handleSelectChange}
@@ -257,10 +288,10 @@ export default function ProdutoForm({
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categorias && categorias.length > 0 ? (
-                    categorias.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
+                  {categoriasItems.length > 0 ? (
+                    categoriasItems.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
                       </SelectItem>
                     ))
                   ) : (
@@ -275,7 +306,7 @@ export default function ProdutoForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="descricao">Descrição</Label>
+            <Label htmlFor="descricao">Descrição *</Label>
             <Textarea
               id="descricao"
               name="descricao"
@@ -292,7 +323,7 @@ export default function ProdutoForm({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="preco">Preço</Label>
+              <Label htmlFor="preco">Preço *</Label>
               <div className="relative">
                 <DollarSign className="h-4 w-4 absolute left-2 top-3 text-muted-foreground" />
                 <Input
@@ -312,21 +343,33 @@ export default function ProdutoForm({
               )}
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="imagemUrl">URL da Imagem</Label>
-              <Input
-                id="imagemUrl"
-                name="imagemUrl"
-                value={formData.imagemUrl}
-                onChange={handleChange}
-                className={erros.imagemUrl ? "border-destructive" : ""}
-                required
-              />
-              {erros.imagemUrl && (
-                <p className="text-sm text-destructive">{erros.imagemUrl}</p>
-              )}
+            <div className="space-y-4 flex flex-col justify-center py-2">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="disponivel"
+                  checked={formData.disponivel}
+                  onCheckedChange={(checked) => handleSwitchChange('disponivel', checked)}
+                />
+                <Label htmlFor="disponivel">Disponível</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="destaque"
+                  checked={formData.destaque}
+                  onCheckedChange={(checked) => handleSwitchChange('destaque', checked)}
+                />
+                <Label htmlFor="destaque">Produto em Destaque</Label>
+              </div>
             </div>
           </div>
+
+          <FileUpload
+            label="Imagem do Produto *"
+            value={formData.imagemUrl}
+            onChange={handleImageChange}
+            error={erros.imagemUrl}
+          />
 
           <div className="space-y-2">
             <Label>Ingredientes</Label>
@@ -337,7 +380,7 @@ export default function ProdutoForm({
               onKeyDown={handleIngredienteChange}
             />
             <div className="flex flex-wrap gap-2 mt-2">
-              {formData.ingredientes.map((ingrediente) => (
+              {formData.ingredientes && formData.ingredientes.map((ingrediente) => (
                 <Badge 
                   key={ingrediente} 
                   variant="outline"
@@ -426,42 +469,20 @@ export default function ProdutoForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="peso">Peso (g)</Label>
-              <div className="relative">
-                <Weight className="h-4 w-4 absolute left-2 top-3 text-muted-foreground" />
-                <Input
-                  id="peso"
-                  name="peso"
-                  type="number"
-                  value={formData.peso}
-                  onChange={handleNumberChange}
-                  step="1"
-                  min="0"
-                  className="pl-8"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4 flex flex-col justify-center py-2">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="disponivel"
-                  checked={formData.disponivel}
-                  onCheckedChange={(checked) => handleSwitchChange('disponivel', checked)}
-                />
-                <Label htmlFor="disponivel">Disponível</Label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="destaque"
-                  checked={formData.destaque}
-                  onCheckedChange={(checked) => handleSwitchChange('destaque', checked)}
-                />
-                <Label htmlFor="destaque">Produto em Destaque</Label>
-              </div>
+          <div className="space-y-2">
+            <Label htmlFor="peso">Peso (g)</Label>
+            <div className="relative">
+              <Weight className="h-4 w-4 absolute left-2 top-3 text-muted-foreground" />
+              <Input
+                id="peso"
+                name="peso"
+                type="number"
+                value={formData.peso}
+                onChange={handleNumberChange}
+                step="1"
+                min="0"
+                className="pl-8"
+              />
             </div>
           </div>
 
@@ -474,7 +495,7 @@ export default function ProdutoForm({
               onKeyDown={handleTagChange}
             />
             <div className="flex flex-wrap gap-2 mt-2">
-              {formData.tags.map((tag) => (
+              {formData.tags && formData.tags.map((tag) => (
                 <Badge 
                   key={tag} 
                   variant="secondary"
@@ -497,7 +518,7 @@ export default function ProdutoForm({
           Cancelar
         </Button>
         <Button onClick={handleSubmit}>
-          {produto && produto._id ? 'Atualizar' : 'Criar'}
+          {produto && (produto._id || produto.id) ? 'Atualizar' : 'Criar'}
         </Button>
       </DialogFooter>
     </Dialog>

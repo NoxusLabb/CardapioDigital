@@ -261,7 +261,7 @@ export default function ProdutosTable({
                   <TableCell>{produto.categoria}</TableCell>
                   <TableCell>{formatCurrency(produto.preco)}</TableCell>
                   <TableCell>
-                    <Badge variant={produto.disponivel ? "success" : "destructive"}>
+                    <Badge variant={produto.disponivel ? "default" : "destructive"} className={produto.disponivel ? "bg-green-500" : ""}>
                       {produto.disponivel ? 'Sim' : 'Não'}
                     </Badge>
                   </TableCell>

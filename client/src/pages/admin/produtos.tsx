@@ -1,26 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Typography,
-  Paper,
-  Box,
-  Button,
-  CircularProgress,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Grid,
-  Card,
-  CardMedia,
-  CardContent,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  Chip,
-} from '@mui/material';
-import { Add } from '@mui/icons-material';
+import { PlusCircle, Loader2 } from 'lucide-react';
 import { productsAPI } from '../../utils/api';
 import { useAuth } from '@/hooks/use-auth';
 import ProdutosTable from '../../components/admin/ProdutosTable';
@@ -30,8 +9,24 @@ import AdminLayout from '../../components/admin/AdminLayout';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { useLocation } from 'wouter';
 
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
+import { Product } from '@shared/schema';
+
 interface Produto {
-  _id: string;
+  _id?: string;
+  id?: number;
   nome: string;
   descricao: string;
   preco: number;
@@ -40,13 +35,72 @@ interface Produto {
   disponivel: boolean;
   ingredientes: string[];
   // Novos campos
-  estoqueQuantidade: number;
-  estoqueMinimo: number;
-  precoCusto: number;
-  peso: number;
-  destaque: boolean;
-  descontoPercentual: number;
-  tags: string[];
+  estoqueQuantidade?: number;
+  estoqueMinimo?: number;
+  precoCusto?: number;
+  peso?: number;
+  destaque?: boolean;
+  descontoPercentual?: number;
+  tags?: string[];
+
+  // Campos da API
+  name?: string;
+  description?: string;
+  price?: number;
+  categoryId?: number;
+  imageUrl?: string;
+  available?: boolean;
+  ingredients?: string[];
+}
+
+// Função auxiliar para mapear produtos da API para formato UI
+function mapApiToUiProduct(produto: any): Produto {
+  // Se já estiver no formato UI, retornar diretamente
+  if ('nome' in produto) {
+    return produto;
+  }
+  
+  return {
+    _id: produto._id,
+    id: produto.id,
+    nome: produto.name,
+    descricao: produto.description,
+    preco: produto.price,
+    categoria: produto.category || `Categoria ${produto.categoryId || 1}`,
+    imagemUrl: produto.imageUrl,
+    disponivel: produto.available,
+    ingredientes: produto.ingredients || [],
+    destaque: produto.featured || false,
+    descontoPercentual: produto.discountPercentage || 0,
+    estoqueQuantidade: produto.stockQuantity || 0,
+    estoqueMinimo: produto.minStockQuantity || 0,
+    precoCusto: produto.costPrice || 0,
+    peso: produto.weight || 0,
+    tags: produto.tags || [],
+  };
+}
+
+// Função para mapear produto UI para formato API
+function mapUiToApiProduct(produto: Produto): any {
+  return {
+    id: produto.id,
+    name: produto.nome,
+    description: produto.descricao,
+    price: produto.preco,
+    categoryId: typeof produto.categoria === 'string' ? 
+      parseInt(produto.categoria.replace(/\D/g, '')) || 1 : 
+      1,
+    imageUrl: produto.imagemUrl,
+    available: produto.disponivel,
+    ingredients: produto.ingredientes || [],
+    featured: produto.destaque || false,
+    discountPercentage: produto.descontoPercentual || 0,
+    stockQuantity: produto.estoqueQuantidade || 0,
+    minStockQuantity: produto.estoqueMinimo || 0,
+    costPrice: produto.precoCusto || 0,
+    weight: produto.peso || 0,
+    tags: produto.tags || [],
+  };
 }
 
 export default function ProdutosPage() {
@@ -72,11 +126,18 @@ export default function ProdutosPage() {
       setLoading(true);
       setError(null);
       const data = await productsAPI.getAll();
-      setProdutos(data);
+      
+      // Mapear produtos da API para o formato UI
+      const produtosFormatados = data.map(mapApiToUiProduct);
+      setProdutos(produtosFormatados);
       
       // Extrair categorias únicas
-      const uniqueCategories = [...new Set(data.map((produto: Produto) => produto.categoria))];
-      setCategorias(uniqueCategories);
+      const categoriasSet = new Set<string>();
+      data.forEach((produto: any) => {
+        const categoria = produto.category || `Categoria ${produto.categoryId || 1}`;
+        categoriasSet.add(categoria);
+      });
+      setCategorias(Array.from(categoriasSet));
     } catch (err: any) {
       console.error('Erro ao buscar produtos:', err);
       setError(err.response?.data?.message || 'Erro ao carregar produtos');
@@ -118,16 +179,21 @@ export default function ProdutosPage() {
   const handleSubmit = async (produto: Produto) => {
     try {
       setLoading(true);
-      if (produto._id) {
+      
+      // Converter o produto para o formato da API
+      const produtoApi = mapUiToApiProduct(produto);
+      
+      if (produto._id || produto.id) {
         // Atualizar existente
-        await productsAPI.update(produto._id, produto);
+        const id = produto._id || String(produto.id);
+        await productsAPI.update(id, produtoApi);
         toast({
           title: 'Produto atualizado',
           description: `O produto ${produto.nome} foi atualizado com sucesso!`,
         });
       } else {
         // Criar novo
-        await productsAPI.create(produto);
+        await productsAPI.create(produtoApi);
         toast({
           title: 'Produto criado',
           description: `O produto ${produto.nome} foi criado com sucesso!`,
@@ -173,36 +239,26 @@ export default function ProdutosPage() {
 
   return (
     <AdminLayout title="Gestão de Produtos">
-      <Box mb={4}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
-            Produtos
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={handleCreateNew}
-            sx={{ 
-              backgroundColor: '#FF5A5F',
-              '&:hover': {
-                backgroundColor: '#E04B50',
-              },
-            }}
-          >
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <h1 className="text-2xl font-bold">Produtos</h1>
+          <Button onClick={handleCreateNew}>
+            <PlusCircle className="mr-2 h-4 w-4" />
             Novo Produto
           </Button>
-        </Box>
+        </div>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
+          <Alert variant="destructive">
+            <AlertTitle>Erro</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
         {loading && produtos.length === 0 ? (
-          <Box display="flex" justifyContent="center" my={5}>
-            <CircularProgress />
-          </Box>
+          <div className="flex justify-center my-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
         ) : (
           <ProdutosTable
             produtos={produtos}
@@ -212,7 +268,7 @@ export default function ProdutosPage() {
             onView={handleView}
           />
         )}
-      </Box>
+      </div>
 
       {/* Formulário de criação/edição */}
       <ProdutoForm
@@ -224,102 +280,111 @@ export default function ProdutosPage() {
       />
 
       {/* Dialog de visualização de produto */}
-      <Dialog
-        open={viewDialogOpen}
-        onClose={handleViewClose}
-        maxWidth="md"
-        fullWidth
-        aria-labelledby="view-dialog-title"
-      >
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         {viewingProduto && (
           <>
-            <DialogTitle id="view-dialog-title">
-              Detalhes do Produto
-            </DialogTitle>
-            <DialogContent dividers>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={5}>
-                  <Card elevation={0}>
-                    <CardMedia
-                      component="img"
-                      height="300"
-                      image={viewingProduto.imagemUrl}
-                      alt={viewingProduto.nome}
-                      sx={{ objectFit: 'cover', borderRadius: 1 }}
-                      onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                        e.currentTarget.src = 'https://via.placeholder.com/300x300?text=Imagem+não+encontrada';
-                      }}
-                    />
-                  </Card>
-                </Grid>
-                <Grid item xs={12} md={7}>
-                  <Typography variant="h5" gutterBottom fontWeight="bold">
-                    {viewingProduto.nome}
-                  </Typography>
+            <DialogHeader>
+              <DialogTitle>Detalhes do Produto</DialogTitle>
+              <DialogDescription>
+                Informações detalhadas sobre o produto selecionado.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <DialogContent className="max-h-[80vh] overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <img 
+                    src={viewingProduto.imagemUrl} 
+                    alt={viewingProduto.nome} 
+                    className="w-full rounded-lg object-cover aspect-square"
+                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                      e.currentTarget.src = 'https://via.placeholder.com/300x300?text=Imagem+não+encontrada';
+                    }}
+                  />
+                </div>
+                
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-bold">{viewingProduto.nome}</h2>
                   
-                  <Box mb={2}>
-                    <Chip 
-                      label={viewingProduto.categoria} 
-                      color="primary" 
-                      size="small" 
-                      sx={{ mr: 1 }}
-                    />
-                    <Chip 
-                      label={viewingProduto.disponivel ? "Disponível" : "Indisponível"} 
-                      color={viewingProduto.disponivel ? "success" : "error"} 
-                      size="small" 
-                    />
-                  </Box>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge className="bg-primary">{viewingProduto.categoria}</Badge>
+                    <Badge variant={viewingProduto.disponivel ? "default" : "destructive"} className={viewingProduto.disponivel ? "bg-green-500" : ""}>
+                      {viewingProduto.disponivel ? 'Disponível' : 'Indisponível'}
+                    </Badge>
+                    {viewingProduto.destaque && <Badge variant="secondary">Destaque</Badge>}
+                  </div>
                   
-                  <Typography variant="h6" color="primary" gutterBottom fontWeight="bold">
-                    {formatCurrency(viewingProduto.preco)}
-                  </Typography>
+                  <div>
+                    <span className="text-xl font-bold text-primary">{formatCurrency(viewingProduto.preco)}</span>
+                    {viewingProduto.descontoPercentual && viewingProduto.descontoPercentual > 0 && (
+                      <Badge variant="outline" className="ml-2">-{viewingProduto.descontoPercentual}%</Badge>
+                    )}
+                  </div>
                   
-                  <Typography variant="body1" paragraph>
-                    {viewingProduto.descricao}
-                  </Typography>
+                  <p className="text-muted-foreground">{viewingProduto.descricao}</p>
                   
-                  {viewingProduto.ingredientes.length > 0 && (
-                    <>
-                      <Typography variant="subtitle1" fontWeight="bold" mt={2}>
-                        Ingredientes:
-                      </Typography>
-                      <List dense>
+                  {viewingProduto.ingredientes && viewingProduto.ingredientes.length > 0 && (
+                    <div className="space-y-2">
+                      <h3 className="font-medium">Ingredientes:</h3>
+                      <ul className="space-y-1">
                         {viewingProduto.ingredientes.map((ingrediente, index) => (
-                          <React.Fragment key={index}>
-                            <ListItem>
-                              <ListItemText primary={ingrediente} />
-                            </ListItem>
-                            {index < viewingProduto.ingredientes.length - 1 && <Divider />}
-                          </React.Fragment>
+                          <li key={index} className="flex items-center">
+                            <span className="text-xs mr-2">•</span>
+                            {ingrediente}
+                          </li>
                         ))}
-                      </List>
-                    </>
+                      </ul>
+                    </div>
                   )}
-                </Grid>
-              </Grid>
+                  
+                  {viewingProduto.tags && viewingProduto.tags.length > 0 && (
+                    <div className="space-y-2">
+                      <h3 className="font-medium">Tags:</h3>
+                      <div className="flex flex-wrap gap-1">
+                        {viewingProduto.tags.map((tag, index) => (
+                          <Badge key={index} variant="outline" className="px-2 py-0.5">{tag}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <Separator />
+                  
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Estoque:</span>
+                      <span className="ml-2 font-medium">{viewingProduto.estoqueQuantidade || 0}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Mínimo:</span>
+                      <span className="ml-2 font-medium">{viewingProduto.estoqueMinimo || 0}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Custo:</span>
+                      <span className="ml-2 font-medium">{formatCurrency(viewingProduto.precoCusto || 0)}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Peso:</span>
+                      <span className="ml-2 font-medium">{viewingProduto.peso || 0}g</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </DialogContent>
-            <DialogActions>
-              <Button onClick={handleViewClose} color="primary">
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={handleViewClose}>
                 Fechar
               </Button>
               <Button 
                 onClick={() => {
                   handleViewClose();
                   handleEdit(viewingProduto);
-                }} 
-                color="primary"
-                variant="contained"
-                sx={{ 
-                  backgroundColor: '#FF5A5F',
-                  '&:hover': {
-                    backgroundColor: '#E04B50',
-                  },
                 }}
               >
                 Editar
               </Button>
-            </DialogActions>
+            </DialogFooter>
           </>
         )}
       </Dialog>
