@@ -1,5 +1,5 @@
 import React from 'react';
-import { Product } from '../services/productService';
+import { Product } from '@shared/schema';
 import CategorySection from './CategorySection';
 import { Category } from '@shared/schema';
 

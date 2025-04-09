@@ -1,16 +1,5 @@
 import axios from 'axios';
-
-// Interface para produtos
-export interface Product {
-  _id: string;
-  nome: string;
-  descricao: string;
-  preco: number;
-  categoria: string;
-  imagemUrl: string;
-  disponivel: boolean;
-  ingredientes: string[];
-}
+import { Product } from '@shared/schema';
 
 // Criar uma instância axios para API
 const api = axios.create({
@@ -22,7 +11,7 @@ export const fetchProducts = async (): Promise<Product[]> => {
   try {
     const response = await api.get('/produtos');
     // Filtra apenas produtos disponíveis
-    return response.data.filter((product: Product) => product.disponivel);
+    return response.data.filter((product: Product) => product.available);
   } catch (error) {
     console.error('Erro ao buscar produtos:', error);
     return [];
@@ -30,14 +19,14 @@ export const fetchProducts = async (): Promise<Product[]> => {
 };
 
 // Organizar produtos por categoria
-export const organizeProductsByCategory = (products: Product[]): Record<string, Product[]> => {
-  const categorized: Record<string, Product[]> = {};
+export const organizeProductsByCategory = (products: Product[]): Record<number, Product[]> => {
+  const categorized: Record<number, Product[]> = {};
 
   products.forEach(product => {
-    if (!categorized[product.categoria]) {
-      categorized[product.categoria] = [];
+    if (!categorized[product.categoryId]) {
+      categorized[product.categoryId] = [];
     }
-    categorized[product.categoria].push(product);
+    categorized[product.categoryId].push(product);
   });
 
   return categorized;

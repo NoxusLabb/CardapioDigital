@@ -1,14 +1,15 @@
 import React from 'react';
+import { Category } from '@shared/schema';
 
 interface CategoryNavProps {
-  categories: string[];
-  activeCategory: string | null;
-  onSelectCategory: (category: string | null) => void;
+  categories: Category[];
+  selectedCategory: number | null;
+  onSelectCategory: (categoryId: number | null) => void;
 }
 
 export default function CategoryNav({ 
   categories, 
-  activeCategory, 
+  selectedCategory, 
   onSelectCategory 
 }: CategoryNavProps) {
   return (
@@ -19,7 +20,7 @@ export default function CategoryNav({
             <button
               onClick={() => onSelectCategory(null)}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                activeCategory === null
+                selectedCategory === null
                   ? 'bg-primary text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
@@ -29,15 +30,15 @@ export default function CategoryNav({
             
             {categories.map((category) => (
               <button
-                key={category}
-                onClick={() => onSelectCategory(category)}
+                key={category.id}
+                onClick={() => onSelectCategory(category.id)}
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                  activeCategory === category
+                  selectedCategory === category.id
                     ? 'bg-primary text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {category}
+                {category.name}
               </button>
             ))}
           </div>

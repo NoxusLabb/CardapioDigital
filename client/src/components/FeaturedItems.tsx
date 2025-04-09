@@ -1,5 +1,5 @@
 import React from 'react';
-import { Product } from '../services/productService';
+import { Product } from '@shared/schema';
 import { formatCurrency } from '../utils/formatCurrency';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 
@@ -57,7 +57,7 @@ export default function FeaturedItems({ items }: FeaturedItemsProps) {
         >
           {items.map((item) => (
             <div
-              key={item._id}
+              key={item.id}
               className="flex-shrink-0 w-64 bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow relative"
             >
               <div className="absolute top-2 left-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded-full z-10">
@@ -65,8 +65,8 @@ export default function FeaturedItems({ items }: FeaturedItemsProps) {
               </div>
               <div className="h-40 bg-gray-200 relative">
                 <img
-                  src={item.imagemUrl}
-                  alt={item.nome}
+                  src={item.imageUrl}
+                  alt={item.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
@@ -87,10 +87,10 @@ export default function FeaturedItems({ items }: FeaturedItemsProps) {
                   </div>
                   <span className="text-xs text-gray-500 ml-1">5.0</span>
                 </div>
-                <h3 className="font-bold text-gray-800 mb-1 truncate">{item.nome}</h3>
-                <p className="text-sm text-gray-500 mb-2 line-clamp-2 h-10">{item.descricao}</p>
+                <h3 className="font-bold text-gray-800 mb-1 truncate">{item.name}</h3>
+                <p className="text-sm text-gray-500 mb-2 line-clamp-2 h-10">{item.description}</p>
                 <div className="flex justify-between items-center mt-2">
-                  <span className="font-bold text-gray-900">{formatCurrency(item.preco)}</span>
+                  <span className="font-bold text-gray-900">{formatCurrency(item.price)}</span>
                   <button className="bg-primary text-white px-3 py-1 rounded-full text-sm font-medium hover:bg-primary/90 transition-colors">
                     Adicionar
                   </button>

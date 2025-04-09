@@ -1,14 +1,16 @@
 import React from 'react';
 import { Menu, X, ShoppingCart, Search, Home, Info, Phone } from 'lucide-react';
 import { Link } from 'wouter';
+import { useCart } from '../context/CartContext';
 
 interface MobileNavProps {
   toggleSearch: () => void;
   toggleCart: () => void;
-  cartItemCount: number;
 }
 
-export default function MobileNav({ toggleSearch, toggleCart, cartItemCount }: MobileNavProps) {
+export default function MobileNav({ toggleSearch, toggleCart }: MobileNavProps) {
+  const { cart } = useCart();
+  const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
   const [isOpen, setIsOpen] = React.useState(false);
   
   const toggleMenu = () => {

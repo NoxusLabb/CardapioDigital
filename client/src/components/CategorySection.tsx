@@ -1,5 +1,5 @@
 import React from 'react';
-import { Product } from '../services/productService';
+import { Product } from '@shared/schema';
 import ProductCard from './ProductCard';
 
 interface CategorySectionProps {
@@ -17,7 +17,7 @@ export default function CategorySection({ title, products }: CategorySectionProp
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.map((product) => (
-            <div key={product._id} className="h-full">
+            <div key={product.id} className="h-full">
               <ProductCard product={product} />
             </div>
           ))}

@@ -1,7 +1,8 @@
 import React from 'react';
 import { X, ShoppingBag, Trash2, Plus, Minus } from 'lucide-react';
 import { formatCurrency } from '../utils/formatCurrency';
-import { Product } from '../services/productService';
+import { Product } from '@shared/schema';
+import { useCart } from '../context/CartContext';
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -14,40 +15,29 @@ interface CartItem {
 }
 
 export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
-  // Simulando items no carrinho
-  const [cartItems, setCartItems] = React.useState<CartItem[]>([]);
-  const cartTotal = cartItems.reduce((total, item) => total + (item.product.preco * item.quantity), 0);
+  const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
+  const cartTotal = cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
   
   const closeCart = () => {
     onClose();
   };
   
   const handleIncrement = (productId: string) => {
-    setCartItems(
-      cartItems.map(item =>
-        item.product._id === productId
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
-    );
+    const item = cart.find(item => String(item.product.id) === productId);
+    if (item) {
+      updateQuantity(productId, item.quantity + 1);
+    }
   };
   
   const handleDecrement = (productId: string) => {
-    setCartItems(
-      cartItems.map(item =>
-        item.product._id === productId && item.quantity > 1
-          ? { ...item, quantity: item.quantity - 1 }
-          : item
-      )
-    );
+    const item = cart.find(item => String(item.product.id) === productId);
+    if (item && item.quantity > 1) {
+      updateQuantity(productId, item.quantity - 1);
+    }
   };
   
   const handleRemove = (productId: string) => {
-    setCartItems(cartItems.filter(item => item.product._id !== productId));
-  };
-  
-  const clearCart = () => {
-    setCartItems([]);
+    removeFromCart(productId);
   };
   
   const checkout = () => {
@@ -88,7 +78,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
           
           {/* Cart items */}
           <div className="flex-grow overflow-y-auto p-4">
-            {cartItems.length === 0 ? (
+            {cart.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-gray-500">
                 <ShoppingBag className="h-16 w-16 mb-4 text-gray-300" />
                 <p className="mb-2">Seu carrinho está vazio</p>
@@ -96,12 +86,12 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
               </div>
             ) : (
               <ul className="space-y-4">
-                {cartItems.map((item) => (
-                  <li key={item.product._id} className="flex border-b pb-4">
+                {cart.map((item) => (
+                  <li key={item.product.id} className="flex border-b pb-4">
                     <div className="h-20 w-20 bg-gray-200 rounded overflow-hidden mr-3 flex-shrink-0">
                       <img 
-                        src={item.product.imagemUrl}
-                        alt={item.product.nome}
+                        src={item.product.imageUrl}
+                        alt={item.product.name}
                         className="h-full w-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
@@ -111,13 +101,13 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                     </div>
                     
                     <div className="flex-grow">
-                      <h3 className="font-medium mb-1 pr-6">{item.product.nome}</h3>
-                      <p className="text-gray-600 text-sm mb-2">{formatCurrency(item.product.preco)}</p>
+                      <h3 className="font-medium mb-1 pr-6">{item.product.name}</h3>
+                      <p className="text-gray-600 text-sm mb-2">{formatCurrency(item.product.price)}</p>
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center border rounded">
                           <button 
-                            onClick={() => handleDecrement(item.product._id)}
+                            onClick={() => handleDecrement(String(item.product.id))}
                             className="p-1 hover:bg-gray-100"
                             aria-label="Diminuir quantidade"
                             disabled={item.quantity <= 1}
@@ -126,7 +116,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                           </button>
                           <span className="px-2 py-1 min-w-[30px] text-center">{item.quantity}</span>
                           <button 
-                            onClick={() => handleIncrement(item.product._id)}
+                            onClick={() => handleIncrement(String(item.product.id))}
                             className="p-1 hover:bg-gray-100"
                             aria-label="Aumentar quantidade"
                           >
@@ -135,7 +125,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                         </div>
                         
                         <button 
-                          onClick={() => handleRemove(item.product._id)}
+                          onClick={() => handleRemove(String(item.product.id))}
                           className="p-1 text-gray-500 hover:text-red-500"
                           aria-label="Remover item"
                         >
@@ -151,7 +141,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
           
           {/* Cart footer */}
           <div className="border-t p-4">
-            {cartItems.length > 0 && (
+            {cart.length > 0 && (
               <>
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between">
@@ -181,7 +171,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
               </>
             )}
             
-            {cartItems.length === 0 && (
+            {cart.length === 0 && (
               <button
                 onClick={closeCart}
                 className="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg font-medium transition-colors"

@@ -90,7 +90,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar toggleSearch={toggleSearch} toggleCart={toggleCart} cartItemCount={0} />
+      <Navbar toggleSearch={toggleSearch} toggleCart={toggleCart} />
       
       {isSearchVisible && (
         <SearchBar 
@@ -122,7 +122,6 @@ export default function HomePage() {
       <MobileNav 
         toggleCart={toggleCart} 
         toggleSearch={toggleSearch}
-        cartItemCount={0} 
       />
     </div>
   );

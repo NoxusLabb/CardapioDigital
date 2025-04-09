@@ -2,14 +2,16 @@ import React from 'react';
 import { Link } from 'wouter';
 import { ShoppingCart, Search, User } from 'lucide-react';
 import MobileNav from './MobileNav';
+import { useCart } from '../context/CartContext';
 
 interface NavbarProps {
   toggleSearch: () => void;
   toggleCart: () => void;
-  cartItemCount: number;
 }
 
-export default function Navbar({ toggleSearch, toggleCart, cartItemCount }: NavbarProps) {
+export default function Navbar({ toggleSearch, toggleCart }: NavbarProps) {
+  const { cart } = useCart();
+  const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-40">
       <div className="container mx-auto px-4">
@@ -68,7 +70,6 @@ export default function Navbar({ toggleSearch, toggleCart, cartItemCount }: Navb
             <MobileNav 
               toggleSearch={toggleSearch} 
               toggleCart={toggleCart} 
-              cartItemCount={cartItemCount} 
             />
           </div>
         </div>

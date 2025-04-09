@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { Product } from '../services/productService';
+import { Product } from '@shared/schema';
 
 export interface CartItem {
   product: Product;
@@ -40,12 +40,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addToCart = (product: Product) => {
     setCart(prevCart => {
       // Verificar se o produto já está no carrinho
-      const existingItem = prevCart.find(item => item.product._id === product._id);
+      const existingItem = prevCart.find(item => item.product.id === product.id);
       
       if (existingItem) {
         // Aumentar a quantidade se o produto já estiver no carrinho
         return prevCart.map(item => 
-          item.product._id === product._id
+          item.product.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
@@ -57,7 +57,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
   
   const removeFromCart = (productId: string) => {
-    setCart(prevCart => prevCart.filter(item => item.product._id !== productId));
+    setCart(prevCart => prevCart.filter(item => String(item.product.id) !== productId));
   };
   
   const updateQuantity = (productId: string, quantity: number) => {
@@ -68,7 +68,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     
     setCart(prevCart => 
       prevCart.map(item => 
-        item.product._id === productId
+        String(item.product.id) === productId
           ? { ...item, quantity }
           : item
       )
