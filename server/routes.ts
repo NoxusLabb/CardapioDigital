@@ -1,12 +1,15 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
 import { setupAuth } from "./auth";
 import { 
   insertProductSchema, 
   insertCategorySchema, 
   createOrderSchema, 
-  trackOrderSchema 
+  trackOrderSchema,
+  orders,
+  orderItems
 } from "@shared/schema";
 import { z } from "zod";
 import { authenticateJWT, requireAdmin, generateToken } from "./jwt";
@@ -313,7 +316,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const order = await storage.createOrder({
         customerName: orderData.customerName,
         customerPhone: orderData.customerPhone,
-        customerAddress: orderData.customerAddress,
+        // Campos de endereço
+        zipCode: orderData.zipCode,
+        street: orderData.street,
+        number: orderData.number,
+        complement: orderData.complement,
+        neighborhood: orderData.neighborhood,
+        city: orderData.city,
+        state: orderData.state,
+        // Construir endereço completo para compatibilidade com campo legado
+        customerAddress: `${orderData.street}, ${orderData.number}${orderData.complement ? `, ${orderData.complement}` : ''} - ${orderData.neighborhood}, ${orderData.city}/${orderData.state} - CEP: ${orderData.zipCode}`,
         totalPrice,
         notes: orderData.notes,
         items: orderItems
@@ -359,9 +371,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Listar todos os pedidos (admin)
   app.get("/api/admin/orders", async (req, res, next) => {
     try {
-      // Esta funcionalidade seria implementada no storage
-      // Retornando erro 501 por enquanto
-      res.status(501).json({ message: "Funcionalidade ainda não implementada" });
+      // Buscar todos os pedidos
+      const orders = await db.query.orders.findMany({
+        orderBy: (orders, { desc }) => [desc(orders.createdAt)],
+        with: {
+          items: true
+        }
+      });
+      
+      res.json(orders);
     } catch (error) {
       next(error);
     }

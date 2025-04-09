@@ -188,7 +188,19 @@ export class DatabaseStorage implements IStorage {
   async createOrder(orderData: {
     customerName: string;
     customerPhone: string;
+    
+    // Campos de endereço
+    zipCode?: string;
+    street?: string;
+    number?: string;
+    complement?: string;
+    neighborhood?: string;
+    city?: string;
+    state?: string;
+    
+    // Campo legado
     customerAddress?: string;
+    
     totalPrice: number;
     notes?: string;
     items: Array<{
@@ -212,6 +224,16 @@ export class DatabaseStorage implements IStorage {
           customerName: orderData.customerName,
           customerPhone: orderData.customerPhone,
           customerAddress: orderData.customerAddress,
+          
+          // Campos de endereço
+          zipCode: orderData.zipCode,
+          street: orderData.street,
+          number: orderData.number,
+          complement: orderData.complement,
+          neighborhood: orderData.neighborhood,
+          city: orderData.city,
+          state: orderData.state,
+          
           totalPrice: orderData.totalPrice,
           notes: orderData.notes,
           status: 'recebido',

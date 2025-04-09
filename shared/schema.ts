@@ -79,7 +79,15 @@ export const orders = pgTable("orders", {
   orderNumber: text("order_number").notNull().unique(), // Código do pedido (ex: PED-1234)
   customerName: text("customer_name").notNull(),
   customerPhone: text("customer_phone").notNull(),
-  customerAddress: text("customer_address"),
+  // Campos de endereço
+  zipCode: text("zip_code"), // CEP
+  street: text("street"), // Rua/Logradouro (obtido pela API de CEP)
+  number: text("number"), // Número da casa/apto
+  complement: text("complement"), // Complemento (opcional)
+  neighborhood: text("neighborhood"), // Bairro (obtido pela API de CEP)
+  city: text("city"), // Cidade (obtida pela API de CEP)
+  state: text("state"), // UF (obtida pela API de CEP)
+  customerAddress: text("customer_address"), // Campo legado - mantido para compatibilidade
   status: orderStatusEnum('status').default('recebido').notNull(),
   totalPrice: doublePrecision("total_price").notNull(),
   notes: text("notes"),
@@ -91,6 +99,13 @@ export const insertOrderSchema = createInsertSchema(orders).pick({
   customerName: true,
   customerPhone: true,
   customerAddress: true,
+  zipCode: true,
+  street: true,
+  number: true,
+  complement: true,
+  neighborhood: true,
+  city: true,
+  state: true,
   totalPrice: true,
   notes: true
 });
@@ -182,12 +197,26 @@ export const productSchema = z.object({
 export const createOrderSchema = z.object({
   customerName: z.string().min(3, { message: "Nome completo é obrigatório" }),
   customerPhone: z.string().min(10, { message: "Telefone é obrigatório" }),
+  
+  // Campos de endereço
+  zipCode: z.string().length(8, { message: "CEP deve conter 8 dígitos" }).regex(/^\d+$/, { message: "CEP deve conter apenas números" }),
+  street: z.string().min(3, { message: "Rua/Logradouro é obrigatório" }),
+  number: z.string().min(1, { message: "Número é obrigatório" }),
+  complement: z.string().optional(),
+  neighborhood: z.string().min(2, { message: "Bairro é obrigatório" }),
+  city: z.string().min(2, { message: "Cidade é obrigatória" }),
+  state: z.string().length(2, { message: "UF deve conter 2 caracteres" }),
+  
+  // Campo legado - mantido para compatibilidade
   customerAddress: z.string().optional(),
+  
+  // Itens do pedido
   items: z.array(z.object({
     productId: z.number(),
     quantity: z.number().min(1),
     notes: z.string().optional()
-  })),
+  })).min(1, { message: "O pedido deve conter pelo menos 1 item" }),
+  
   notes: z.string().optional()
 });
 

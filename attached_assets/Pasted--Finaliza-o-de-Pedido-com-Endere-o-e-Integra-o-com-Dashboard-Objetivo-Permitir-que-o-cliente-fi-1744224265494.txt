@@ -1,0 +1,73 @@
+ Finalização de Pedido com Endereço e Integração com Dashboard
+🎯 Objetivo
+Permitir que o cliente finalize seu pedido informando dados pessoais e de entrega, com registro automático na API e exibição em tempo real no dashboard administrativo para acompanhamento e gestão interna.
+
+🧩 Funcionalidade: Checkout com Endereço
+1. Tela de Checkout (Cliente)
+Na interface do cliente (/checkout), o usuário poderá:
+
+Confirmar os produtos adicionados ao carrinho
+
+Preencher os seguintes dados obrigatórios:
+
+Nome completo
+
+Telefone/WhatsApp
+
+CEP (com consulta automática de bairro, cidade e UF via API externa como ViaCEP)
+
+Número da casa
+
+Clicar no botão "Finalizar Pedido"
+
+2. Requisição para a API
+Endpoint: POST /api/pedidos
+Função: Registrar o pedido com os dados do cliente e os produtos selecionados.
+
+⚠️ O frontend deve realizar a consulta do CEP antes de enviar a requisição, preenchendo bairro, cidade e UF automaticamente.
+
+📍 Validações Obrigatórias
+Campo	Regra
+Nome	Obrigatório
+Telefone	Obrigatório e deve estar em formato válido com DDD
+CEP	Deve conter 8 dígitos válidos (ex: 01001000)
+Número da casa	Obrigatório
+Carrinho	Deve conter ao menos 1 item
+Produtos	Devem existir e estar com status disponível no banco de dados
+🖥️ Dashboard Admin
+Endpoint: GET /api/pedidos
+Retorna todos os pedidos ordenados por data de criação (mais recentes primeiro).
+
+Exibição no Painel
+Cada pedido será mostrado em uma tabela ou grade com:
+
+Código do pedido (ex: PED-20250409-1298)
+
+Nome do cliente
+
+Resumo dos produtos (nome + quantidade)
+
+Status atual do pedido, com possibilidade de atualização:
+
+Recebido
+
+Em preparo
+
+A caminho
+
+Entregue
+
+O admin pode clicar em um pedido para visualizar os detalhes completos, incluindo endereço, valor total e produtos.
+
+🔄 Fluxo Completo do Pedido
+Cliente preenche os dados no checkout (incluindo CEP e número da casa).
+
+Frontend consulta o CEP para obter bairro, cidade e estado.
+
+Frontend envia os dados completos via POST /api/pedidos.
+
+Backend valida, gera um código único e salva o pedido no banco de dados.
+
+O pedido é exibido automaticamente no dashboard do admin.
+
+O cliente recebe o código do pedido para rastreamento posterior.

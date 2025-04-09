@@ -22,7 +22,8 @@ import {
   RestaurantMenu, 
   Dashboard, 
   ExitToApp,
-  Category
+  Category,
+  ReceiptLong
 } from '@mui/icons-material';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
@@ -54,6 +55,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     { text: 'Dashboard', icon: <Dashboard />, path: '/admin/dashboard' },
     { text: 'Produtos', icon: <RestaurantMenu />, path: '/admin/produtos' },
     { text: 'Categorias', icon: <Category />, path: '/admin/categorias' },
+    { text: 'Pedidos', icon: <ReceiptLong />, path: '/admin/pedidos' },
   ];
 
   const drawer = (
