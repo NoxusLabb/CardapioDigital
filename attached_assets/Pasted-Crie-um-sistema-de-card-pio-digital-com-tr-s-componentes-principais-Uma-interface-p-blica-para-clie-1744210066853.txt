@@ -1,0 +1,50 @@
+Crie um sistema de cardápio digital com três componentes principais:
+Uma interface pública para clientes navegarem pelos produtos, organizados por categoria.
+Um painel administrativo protegido com autenticação JWT, onde é possível realizar operações CRUD nos produtos.
+Uma API RESTful construída com Node.js e Express para gerenciamento dos produtos.
+O sistema deve gerenciar produtos com os seguintes atributos:
+nome, descrição, preço
+categoria (Aperitivo, Prato Principal, Sobremesa)
+URL da imagem
+status de disponibilidade
+lista de ingredientes
+Utilize postgresql como banco de dados.
+Referência visual: Layouts inspirados em plataformas como UberEats e DoorDash.
+Guia de Estilo:
+Cores: Primária #FF5A5F, Secundária #00A699, Fundo #FFFFFF, Texto #484848, Destaque #767676
+Tipografia: SF Pro Text/Roboto, 16px
+Layout mobile-first com sistema de cartões
+Estrutura do Projeto (MERN Stack - Exemplo)
+Copy
+cardapio-digital/
+├── backend/               # API e Lógica do Servidor
+│   ├── models/            # Modelos do MongoDB (ex: Produto.js)
+│   ├── routes/            # Rotas da API (ex: produtoRoutes.js)
+│   ├── controllers/       # Lógica das rotas (ex: produtoController.js)
+│   ├── middlewares/       # Middlewares (autenticação, etc)
+│   ├── config/            # Configurações (DB, env)
+│   ├── app.js             # Configuração principal do Express
+│   └── package.json
+│
+├── frontend/              # Aplicação que consome a API (para clientes)
+│   ├── public/            # Arquivos estáticos
+│   ├── src/
+│   │   ├── components/    # Componentes React
+│   │   ├── pages/         # Páginas (Home, Cardápio)
+│   │   ├── services/      # Chamadas à API (api.js)
+│   │   ├── App.js
+│   │   └── index.js
+│   └── package.json
+│
+├── dashboard/             # Painel Admin (CRUD de produtos)
+│   ├── src/
+│   │   ├── components/    # Componentes (FormProduto, ListaProdutos)
+│   │   ├── pages/         # Páginas (Login, Dashboard)
+│   │   ├── routes/        # Rotas internas
+│   │   ├── services/      # API calls
+│   │   ├── App.js
+│   │   └── index.js
+│   └── package.json
+│
+├── docker-compose.yml     # Opcional: Para containerização
+└── README.md
