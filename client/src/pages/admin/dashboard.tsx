@@ -49,13 +49,9 @@ export default function DashboardPage() {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user || !user.isAdmin) {
-      navigate('/admin/login');
-      return;
-    }
-    
+    // O ProtectedRoute já verifica se o usuário é admin, não há necessidade de revalidar aqui
     fetchData();
-  }, [user, navigate]);
+  }, []);
 
   const fetchData = async () => {
     try {

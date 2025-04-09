@@ -55,13 +55,9 @@ export default function ProdutosPage() {
   const [location, navigate] = useLocation();
 
   useEffect(() => {
-    if (!user || !user.isAdmin) {
-      navigate('/admin/login');
-      return;
-    }
-    
+    // O ProtectedRoute já verifica se o usuário é admin, não há necessidade de revalidar aqui
     fetchProdutos();
-  }, [user, navigate]);
+  }, []);
 
   const fetchProdutos = async () => {
     try {
