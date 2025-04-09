@@ -1,6 +1,6 @@
 import React from 'react';
 import { Product } from '@shared/schema';
-import { formatCurrency } from '../utils/formatCurrency';
+import { formatCurrency } from '@/lib/utils';
 import { ShoppingCart, Info } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 

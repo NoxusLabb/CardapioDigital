@@ -10,7 +10,7 @@ interface MenuItemsGridProps {
 
 export default function MenuItemsGrid({ productsByCategory, categories }: MenuItemsGridProps) {
   return (
-    <div id="cardapio" className="pt-8 pb-16">
+    <div id="cardapio" className="product-grid pt-8 pb-16">
       {categories.map((category) => (
         <CategorySection
           key={category.id}

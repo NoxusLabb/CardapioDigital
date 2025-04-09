@@ -15,7 +15,7 @@ export default function Navbar({ toggleSearch, toggleCart }: NavbarProps) {
   return (
     <nav className="navbar bg-white shadow-sm sticky top-0 z-40">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+        <div className="header-navigation flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="text-xl font-bold text-primary">

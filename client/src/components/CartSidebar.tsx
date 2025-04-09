@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, ShoppingBag, Trash2, Plus, Minus } from 'lucide-react';
-import { formatCurrency } from '../utils/formatCurrency';
+import { formatCurrency } from '@/lib/utils';
 import { Product } from '@shared/schema';
 import { useCart } from '../context/CartContext';
 
@@ -157,7 +157,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                 <div className="space-y-2">
                   <button
                     onClick={checkout}
-                    className="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg font-medium transition-colors"
+                    className="checkout-button w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg font-medium transition-colors"
                   >
                     Finalizar Pedido
                   </button>
