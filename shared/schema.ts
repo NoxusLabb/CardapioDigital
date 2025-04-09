@@ -36,7 +36,16 @@ export const products = pgTable("products", {
   imageUrl: text("image_url").notNull(),
   available: boolean("available").default(true).notNull(),
   ingredients: text("ingredients").array(),
+  // Campos para gestão de estoque
+  stockQuantity: integer("stock_quantity").default(0).notNull(),
+  minimumStock: integer("minimum_stock").default(5),
+  costPrice: doublePrecision("cost_price"), // Preço de custo (optional)
+  weight: doublePrecision("weight"), // Peso em gramas (optional)
+  featured: boolean("featured").default(false).notNull(), // Produto em destaque
+  discountPercent: integer("discount_percent").default(0), // % de desconto
+  tags: text("tags").array(), // Tags/etiquetas para filtragem
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const insertProductSchema = createInsertSchema(products).pick({
@@ -47,6 +56,13 @@ export const insertProductSchema = createInsertSchema(products).pick({
   imageUrl: true,
   available: true,
   ingredients: true,
+  stockQuantity: true,
+  minimumStock: true,
+  costPrice: true,
+  weight: true,
+  featured: true,
+  discountPercent: true,
+  tags: true,
 });
 
 // Status do pedido (Enum para pedidos)
@@ -153,6 +169,13 @@ export const productSchema = z.object({
   imageUrl: z.string().url({ message: "URL da imagem inválida" }),
   available: z.boolean(),
   ingredients: z.array(z.string()).optional(),
+  stockQuantity: z.number().int().min(0, { message: "Quantidade em estoque não pode ser negativa" }).optional(),
+  minimumStock: z.number().int().min(0).optional(),
+  costPrice: z.number().min(0).optional(),
+  weight: z.number().min(0).optional(),
+  featured: z.boolean().optional(),
+  discountPercent: z.number().int().min(0).max(100).optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 // Schemas para validação e criação de pedidos

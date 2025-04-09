@@ -36,6 +36,14 @@ interface Produto {
   imagemUrl: string;
   disponivel: boolean;
   ingredientes: string[];
+  // Novos campos
+  estoqueQuantidade: number;
+  estoqueMinimo: number;
+  precoCusto: number;
+  peso: number;
+  destaque: boolean;
+  descontoPercentual: number;
+  tags: string[];
 }
 
 interface ProdutoFormProps {
@@ -54,6 +62,14 @@ const defaultProduto: Produto = {
   imagemUrl: '',
   disponivel: true,
   ingredientes: [],
+  // Valores padrão para os novos campos
+  estoqueQuantidade: 0,
+  estoqueMinimo: 5,
+  precoCusto: 0,
+  peso: 0,
+  destaque: false,
+  descontoPercentual: 0,
+  tags: [],
 };
 
 export default function ProdutoForm({
@@ -66,6 +82,7 @@ export default function ProdutoForm({
   const [formData, setFormData] = useState<Produto>(defaultProduto);
   const [erros, setErros] = useState<Record<string, string>>({});
   const [novoIngrediente, setNovoIngrediente] = useState('');
+  const [novaTag, setNovaTag] = useState('');
 
   useEffect(() => {
     if (produto) {
@@ -92,9 +109,10 @@ export default function ProdutoForm({
   };
 
   const handleSwitchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name } = e.target;
     setFormData({
       ...formData,
-      disponivel: e.target.checked,
+      [name]: e.target.checked,
     });
   };
 
@@ -113,18 +131,20 @@ export default function ProdutoForm({
     }
   };
 
-  const handlePrecoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
+  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const numValue = parseFloat(value);
+    
     setFormData({
       ...formData,
-      preco: isNaN(value) ? 0 : value,
+      [name]: isNaN(numValue) ? 0 : numValue,
     });
     
-    // Limpar erro do campo preco
-    if (erros.preco) {
+    // Limpar erro do campo se existir
+    if (erros[name]) {
       setErros({
         ...erros,
-        preco: '',
+        [name]: '',
       });
     }
   };
@@ -149,6 +169,30 @@ export default function ProdutoForm({
       ...formData,
       ingredientes: formData.ingredientes.filter(
         (ingrediente) => ingrediente !== ingredienteToDelete
+      ),
+    });
+  };
+  
+  const handleTagChange = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' && novaTag.trim() !== '') {
+      e.preventDefault();
+      
+      if (!formData.tags.includes(novaTag.trim())) {
+        setFormData({
+          ...formData,
+          tags: [...formData.tags, novaTag.trim()],
+        });
+      }
+      
+      setNovaTag('');
+    }
+  };
+  
+  const handleTagDelete = (tagToDelete: string) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter(
+        (tag) => tag !== tagToDelete
       ),
     });
   };
@@ -283,7 +327,7 @@ export default function ProdutoForm({
                 name="preco"
                 type="number"
                 value={formData.preco}
-                onChange={handlePrecoChange}
+                onChange={handleNumberChange}
                 error={!!erros.preco}
                 helperText={erros.preco}
                 required
@@ -334,18 +378,131 @@ export default function ProdutoForm({
               </Box>
             </Grid>
             
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.disponivel}
-                    onChange={handleSwitchChange}
-                    name="disponivel"
-                    color="primary"
-                  />
-                }
-                label="Disponível"
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Preço de Custo"
+                name="precoCusto"
+                type="number"
+                value={formData.precoCusto}
+                onChange={handleNumberChange}
+                inputProps={{ min: "0", step: "0.01" }}
+                margin="normal"
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">R$</InputAdornment>,
+                }}
               />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Desconto (%)"
+                name="descontoPercentual"
+                type="number"
+                value={formData.descontoPercentual}
+                onChange={handleNumberChange}
+                inputProps={{ min: "0", max: "100", step: "1" }}
+                margin="normal"
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                }}
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Quantidade em Estoque"
+                name="estoqueQuantidade"
+                type="number"
+                value={formData.estoqueQuantidade}
+                onChange={handleNumberChange}
+                inputProps={{ min: "0", step: "1" }}
+                margin="normal"
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Estoque Mínimo"
+                name="estoqueMinimo"
+                type="number"
+                value={formData.estoqueMinimo}
+                onChange={handleNumberChange}
+                inputProps={{ min: "0", step: "1" }}
+                margin="normal"
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Peso (g)"
+                name="peso"
+                type="number"
+                value={formData.peso}
+                onChange={handleNumberChange}
+                inputProps={{ min: "0", step: "1" }}
+                margin="normal"
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">g</InputAdornment>,
+                }}
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', mt: 2, gap: 1 }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formData.disponivel}
+                      onChange={handleSwitchChange}
+                      name="disponivel"
+                      color="primary"
+                    />
+                  }
+                  label="Disponível"
+                />
+                
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formData.destaque}
+                      onChange={handleSwitchChange}
+                      name="destaque"
+                      color="primary"
+                    />
+                  }
+                  label="Produto em Destaque"
+                />
+              </Box>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <Box mb={1}>
+                <Typography variant="subtitle1">Tags:</Typography>
+              </Box>
+              <TextField
+                fullWidth
+                label="Adicionar tag (pressione Enter)"
+                value={novaTag}
+                onChange={(e) => setNovaTag(e.target.value)}
+                onKeyDown={handleTagChange}
+                margin="normal"
+              />
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+                {formData.tags.map((tag) => (
+                  <Chip
+                    key={tag}
+                    label={tag}
+                    onDelete={() => handleTagDelete(tag)}
+                    color="secondary"
+                    variant="outlined"
+                  />
+                ))}
+              </Box>
             </Grid>
           </Grid>
         </Box>
