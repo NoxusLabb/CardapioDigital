@@ -44,7 +44,8 @@ interface DrizzleProduct {
 
 // Interface para o formato antigo de produtos (UI)
 interface ProdutoUI {
-  _id: string;
+  _id?: string;
+  id?: number;
   nome: string;
   descricao: string;
   preco: number;
@@ -141,11 +142,17 @@ export default function ProdutosTable({
     setSortConfig({ key, direction });
   };
 
-  const filteredProducts = produtosFormatados.filter(produto => 
-    produto.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    produto.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    produto.descricao.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = produtosFormatados.filter(produto => {
+    // Verificar se os campos existem antes de chamar toLowerCase()
+    const nome = produto?.nome?.toLowerCase() || '';
+    const categoria = produto?.categoria?.toLowerCase() || '';
+    const descricao = produto?.descricao?.toLowerCase() || '';
+    const searchTermLower = searchTerm.toLowerCase();
+    
+    return nome.includes(searchTermLower) || 
+           categoria.includes(searchTermLower) || 
+           descricao.includes(searchTermLower);
+  });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (!sortConfig.key) return 0;
@@ -246,7 +253,7 @@ export default function ProdutosTable({
               </TableRow>
             ) : (
               sortedProducts.map((produto) => (
-                <TableRow key={produto._id}>
+                <TableRow key={produto._id || produto.id}>
                   <TableCell>
                     <img
                       src={produto.imagemUrl}
@@ -283,7 +290,7 @@ export default function ProdutosTable({
                           <span>Editar</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={() => handleDeleteClick(produto._id)}
+                          onClick={() => handleDeleteClick(produto._id || String(produto.id))}
                           className="text-destructive"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
