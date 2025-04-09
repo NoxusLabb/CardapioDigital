@@ -9,7 +9,7 @@ const api = axios.create({
 // Buscar todos os produtos
 export const fetchProducts = async (): Promise<Product[]> => {
   try {
-    const response = await api.get('/produtos');
+    const response = await api.get('/products');
     // Filtra apenas produtos disponíveis
     return response.data.filter((product: Product) => product.available);
   } catch (error) {

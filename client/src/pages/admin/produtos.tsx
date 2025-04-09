@@ -39,6 +39,14 @@ interface Produto {
   imagemUrl: string;
   disponivel: boolean;
   ingredientes: string[];
+  // Novos campos
+  estoqueQuantidade: number;
+  estoqueMinimo: number;
+  precoCusto: number;
+  peso: number;
+  destaque: boolean;
+  descontoPercentual: number;
+  tags: string[];
 }
 
 export default function ProdutosPage() {
