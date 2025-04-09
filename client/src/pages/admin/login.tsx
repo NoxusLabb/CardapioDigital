@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useRoute } from 'wouter';
+import { useLocation } from 'wouter';
 import { 
   Container,
   Box,
@@ -7,21 +7,21 @@ import {
   TextField,
   Button,
   Paper,
-  Grid,
-  Link as MuiLink,
+  Grid as MuiGrid,
+  Link,
   CircularProgress,
   Alert
 } from '@mui/material';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 import { Lock, Email, Person } from '@mui/icons-material';
 
-export default function LoginPage() {
+export default function AdminLogin() {
   const [formState, setFormState] = useState('login');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [nome, setNome] = useState('');
   const [, setLocation] = useLocation();
-  const { user, loading, error, login, register } = useAuth();
+  const { user, isLoading, error, loginMutation, registerMutation } = useAuth();
   
   // Redirecionar se já estiver autenticado
   useEffect(() => {
@@ -34,9 +34,16 @@ export default function LoginPage() {
     e.preventDefault();
     
     if (formState === 'login') {
-      await login({ email, password: senha });
+      loginMutation.mutate({ 
+        username: email, 
+        password: senha 
+      });
     } else {
-      await register({ nome, email, senha });
+      registerMutation.mutate({ 
+        username: email, 
+        password: senha,
+        isAdmin: true 
+      });
     }
   };
 
@@ -73,18 +80,18 @@ export default function LoginPage() {
           
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
+              {error.message || "Erro ao realizar operação"}
             </Alert>
           )}
           
           <Box component="form" onSubmit={handleSubmit}>
             {formState === 'register' && (
-              <Grid item xs={12} sx={{ mb: 2 }}>
+              <Box sx={{ mb: 2 }}>
                 <TextField
                   required
                   fullWidth
                   id="nome"
-                  label="Nome Completo"
+                  label="Nome"
                   name="nome"
                   autoComplete="name"
                   value={nome}
@@ -93,10 +100,10 @@ export default function LoginPage() {
                     startAdornment: <Person sx={{ mr: 1, color: 'text.secondary' }} />,
                   }}
                 />
-              </Grid>
+              </Box>
             )}
             
-            <Grid item xs={12} sx={{ mb: 2 }}>
+            <Box sx={{ mb: 2 }}>
               <TextField
                 required
                 fullWidth
@@ -104,16 +111,15 @@ export default function LoginPage() {
                 label="Email"
                 name="email"
                 autoComplete="email"
-                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 InputProps={{
                   startAdornment: <Email sx={{ mr: 1, color: 'text.secondary' }} />,
                 }}
               />
-            </Grid>
+            </Box>
             
-            <Grid item xs={12} sx={{ mb: 3 }}>
+            <Box sx={{ mb: 3 }}>
               <TextField
                 required
                 fullWidth
@@ -121,14 +127,14 @@ export default function LoginPage() {
                 label="Senha"
                 type="password"
                 id="senha"
-                autoComplete="current-password"
+                autoComplete={formState === 'login' ? 'current-password' : 'new-password'}
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 InputProps={{
                   startAdornment: <Lock sx={{ mr: 1, color: 'text.secondary' }} />,
                 }}
               />
-            </Grid>
+            </Box>
             
             <Button
               type="submit"
@@ -136,42 +142,34 @@ export default function LoginPage() {
               variant="contained"
               sx={{ 
                 mt: 2, 
-                mb: 2, 
+                mb: 2,
                 py: 1.5,
                 backgroundColor: '#FF5A5F',
                 '&:hover': {
                   backgroundColor: '#E04B50',
                 },
+                fontWeight: 'bold'
               }}
-              disabled={loading}
+              disabled={isLoading || loginMutation.isPending || registerMutation.isPending}
             >
-              {loading ? (
-                <CircularProgress size={24} color="inherit" />
+              {isLoading || loginMutation.isPending || registerMutation.isPending ? (
+                <CircularProgress size={24} sx={{ color: 'white' }} />
               ) : (
                 formState === 'login' ? 'Entrar' : 'Cadastrar'
               )}
             </Button>
             
-            <Grid container justifyContent="center">
-              <Grid item>
-                <MuiLink 
-                  component="button" 
-                  variant="body2" 
-                  onClick={toggleForm}
-                  sx={{ 
-                    color: '#00A699',
-                    textDecoration: 'none',
-                    '&:hover': {
-                      textDecoration: 'underline',
-                    }
-                  }}
-                >
-                  {formState === 'login'
-                    ? "Não tem uma conta? Cadastre-se"
-                    : "Já tem uma conta? Faça login"}
-                </MuiLink>
-              </Grid>
-            </Grid>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Link 
+                component="button" 
+                type="button"
+                variant="body2" 
+                onClick={toggleForm}
+                sx={{ color: '#00A699', textDecoration: 'none' }}
+              >
+                {formState === 'login' ? 'Não tem uma conta? Cadastre-se' : 'Já tem uma conta? Entre'}
+              </Link>
+            </Box>
           </Box>
         </Paper>
       </Box>

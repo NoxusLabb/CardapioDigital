@@ -10,12 +10,10 @@ import {
   type InsertProduct 
 } from "@shared/schema";
 
-import { db } from "./db";
-import { eq, like, and } from "drizzle-orm";
-import session from "express-session";
+import { db, pool } from "./db";
+import { eq, like, or } from "drizzle-orm";
+import * as ExpressSession from "express-session";
 import connectPg from "connect-pg-simple";
-
-const PostgresSessionStore = connectPg(session);
 
 // Interface with CRUD methods for our app
 export interface IStorage {
@@ -41,15 +39,16 @@ export interface IStorage {
   deleteProduct(id: number): Promise<boolean>;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: ExpressSession.Store;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: ExpressSession.Store;
 
   constructor() {
+    const PostgresSessionStore = connectPg(ExpressSession);
     this.sessionStore = new PostgresSessionStore({
-      conString: process.env.DATABASE_URL,
+      pool,
       createTableIfMissing: true,
     });
   }

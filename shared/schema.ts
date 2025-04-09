@@ -1,6 +1,7 @@
-import { pgTable, text, serial, integer, boolean, doublePrecision, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, doublePrecision, timestamp, foreignKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -31,7 +32,7 @@ export const products = pgTable("products", {
   name: text("name").notNull(),
   description: text("description").notNull(),
   price: doublePrecision("price").notNull(),
-  categoryId: integer("category_id").notNull(),
+  categoryId: integer("category_id").notNull().references(() => categories.id),
   imageUrl: text("image_url").notNull(),
   available: boolean("available").default(true).notNull(),
   ingredients: text("ingredients").array(),
@@ -57,6 +58,18 @@ export type Category = typeof categories.$inferSelect;
 
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
+
+// Relations
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  products: many(products)
+}));
+
+export const productsRelations = relations(products, ({ one }) => ({
+  category: one(categories, {
+    fields: [products.categoryId],
+    references: [categories.id]
+  })
+}));
 
 // Validation schemas
 export const productSchema = z.object({

@@ -12,7 +12,7 @@ import Dashboard from "@/pages/admin/dashboard";
 import ProdutosAdmin from "@/pages/admin/produtos";
 import AdminLogin from "@/pages/admin/login";
 import { ProtectedRoute } from "./lib/protected-route";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "./hooks/use-auth";
 import { CartProvider } from "./context/CartContext";
 
 function Router() {
