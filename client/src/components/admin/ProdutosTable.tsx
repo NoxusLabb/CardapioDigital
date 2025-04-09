@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   DataGrid,
   GridColDef,
@@ -21,7 +21,22 @@ import {
 import { Edit, Delete, Visibility } from '@mui/icons-material';
 import { formatCurrency } from '@/utils/formatCurrency';
 
-interface Produto {
+// Interface para os produtos vindos da API (Drizzle)
+interface DrizzleProduct {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  categoryId: number;
+  imageUrl: string;
+  available: boolean;
+  ingredients: string[];
+  createdAt: string;
+  category?: string;
+}
+
+// Interface para o formato antigo de produtos (UI)
+interface ProdutoUI {
   _id: string;
   nome: string;
   descricao: string;
@@ -30,22 +45,22 @@ interface Produto {
   imagemUrl: string;
   disponivel: boolean;
   ingredientes: string[];
-  // Novos campos
-  estoqueQuantidade: number;
-  estoqueMinimo: number;
-  precoCusto: number;
-  peso: number;
-  destaque: boolean;
-  descontoPercentual: number;
-  tags: string[];
+  // Campos adicionais
+  estoqueQuantidade?: number;
+  estoqueMinimo?: number;
+  precoCusto?: number;
+  peso?: number;
+  destaque?: boolean;
+  descontoPercentual?: number;
+  tags?: string[];
 }
 
 interface ProdutosTableProps {
-  produtos: Produto[];
+  produtos: any[]; // Aceitamos qualquer formato de produto
   loading: boolean;
-  onEdit: (produto: Produto) => void;
+  onEdit: (produto: any) => void;
   onDelete: (id: string) => void;
-  onView: (produto: Produto) => void;
+  onView: (produto: any) => void;
 }
 
 export default function ProdutosTable({
@@ -57,6 +72,36 @@ export default function ProdutosTable({
 }: ProdutosTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [produtoToDelete, setProdutoToDelete] = useState<string | null>(null);
+  const [produtosFormatados, setProdutosFormatados] = useState<ProdutoUI[]>([]);
+
+  // Formatar produtos para interface UI
+  useEffect(() => {
+    if (produtos && produtos.length > 0) {
+      const formatados = produtos.map(produto => {
+        // Verificar o formato do produto baseado nas propriedades
+        if ('id' in produto) {
+          // É um produto da API Drizzle
+          const drizzleProduto = produto as DrizzleProduct;
+          return {
+            _id: String(drizzleProduto.id),
+            nome: drizzleProduto.name,
+            descricao: drizzleProduto.description,
+            preco: drizzleProduto.price,
+            categoria: drizzleProduto.category || String(drizzleProduto.categoryId),
+            imagemUrl: drizzleProduto.imageUrl,
+            disponivel: drizzleProduto.available,
+            ingredientes: drizzleProduto.ingredients || [],
+          };
+        } else {
+          // É um produto já no formato antigo, não precisa converter
+          return produto as ProdutoUI;
+        }
+      });
+      setProdutosFormatados(formatados);
+    } else {
+      setProdutosFormatados([]);
+    }
+  }, [produtos]);
 
   const handleDeleteClick = (id: string) => {
     setProdutoToDelete(id);
@@ -161,7 +206,7 @@ export default function ProdutosTable({
     <>
       <Box sx={{ height: 'calc(100vh - 220px)', width: '100%' }}>
         <DataGrid
-          rows={produtos}
+          rows={produtosFormatados}
           getRowId={(row) => row._id}
           columns={columns}
           loading={loading}
