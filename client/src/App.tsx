@@ -8,6 +8,7 @@ import theme from './lib/theme';
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
+import ContaPage from "@/pages/conta-page";
 import Dashboard from "@/pages/admin/dashboard";
 import ProdutosAdmin from "@/pages/admin/produtos";
 import AdminLogin from "@/pages/admin/login";
@@ -20,6 +21,7 @@ function Router() {
     <Switch>
       <Route path="/" component={HomePage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/conta" component={ContaPage} />
       <Route path="/admin/login" component={AdminLogin} />
       <ProtectedRoute path="/admin/dashboard" component={Dashboard} adminOnly={true} />
       <ProtectedRoute path="/admin/produtos" component={ProdutosAdmin} adminOnly={true} />

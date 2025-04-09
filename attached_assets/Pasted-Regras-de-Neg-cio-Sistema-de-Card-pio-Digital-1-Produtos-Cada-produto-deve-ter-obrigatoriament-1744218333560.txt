@@ -1,0 +1,86 @@
+Regras de Negócio – Sistema de Cardápio Digital
+🧾 1. Produtos
+Cada produto deve ter obrigatoriamente:
+
+Nome
+
+Descrição
+
+Preço
+
+Categoria (Aperitivo, Prato Principal, Sobremesa)
+
+Disponibilidade (true/false)
+
+Imagem e lista de ingredientes são opcionais, mas recomendadas.
+
+O preço deve ser um número positivo, com no máximo 2 casas decimais.
+
+📂 2. Categorias
+Os produtos devem ser organizados por categoria pré-definida:
+
+Aperitivo
+
+Prato Principal
+
+Sobremesa
+
+No frontend público, a listagem dos produtos deve ser separada visualmente por essas categorias.
+
+Não é permitido criar novas categorias via painel administrativo (somente utilizar as pré-definidas).
+
+✅ 3. Disponibilidade
+Somente produtos com disponivel: true devem ser exibidos na interface pública (clientes).
+
+Produtos com disponivel: false ainda são visíveis no dashboard e podem ser editados ou reativados.
+
+Produtos indisponíveis não devem ser excluídos automaticamente, apenas ocultados da listagem pública.
+
+🔐 4. Autenticação (Dashboard)
+Apenas usuários autenticados com token JWT válido podem:
+
+Criar novos produtos
+
+Editar produtos existentes
+
+Excluir produtos
+
+O token deve ser enviado no header Authorization: Bearer <token> para rotas protegidas.
+
+O login deve ser feito com e-mail e senha previamente cadastrados no backend (sem sistema de cadastro público).
+
+🗑️ 5. Exclusão de Produtos
+A exclusão de um produto é permanente e irreversível.
+
+Antes da exclusão, deve ser exibido um modal de confirmação no dashboard.
+
+Alternativa recomendada: desativar (disponivel: false) ao invés de excluir diretamente.
+
+🌍 6. API
+A API deve seguir o padrão RESTful com as seguintes regras:
+
+GET /api/produtos → Listar todos os produtos (com filtro opcional por categoria e disponibilidade)
+
+GET /api/produtos/:id → Detalhar um produto
+
+POST /api/produtos → Criar produto (requer JWT)
+
+PUT /api/produtos/:id → Atualizar produto (requer JWT)
+
+DELETE /api/produtos/:id → Excluir produto (requer JWT)
+
+⚠️ 7. Validações
+Campos obrigatórios não podem ser enviados em branco ou nulos.
+
+Ingredientes, quando fornecidos, devem ser um array de strings.
+
+Categorias devem ser validadas com base em uma lista fixa.
+
+📈 8. Otimizações Futuras (não obrigatórias no MVP)
+Paginação para listagens grandes no dashboard
+
+Filtro por nome ou categoria no dashboard
+
+Upload de imagens em nuvem (Firebase Storage ou S3)
+
+Versionamento de produtos (ex: manter histórico de alterações)
