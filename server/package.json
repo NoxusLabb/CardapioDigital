@@ -1,0 +1,22 @@
+{
+  "name": "cardapio-digital-backend",
+  "version": "1.0.0",
+  "description": "Backend para sistema de cardápio digital",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "data:import": "node seeder.js",
+    "data:destroy": "node seeder.js -d"
+  },
+  "keywords": [
+    "cardapio",
+    "digital",
+    "mongodb",
+    "express",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "MIT"
+}
