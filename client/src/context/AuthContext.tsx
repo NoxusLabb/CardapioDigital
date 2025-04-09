@@ -19,7 +19,7 @@ interface AuthContextType {
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -47,6 +47,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: 'Login realizado com sucesso',
         description: `Bem-vindo, ${data.nome}!`,
       });
+      
+      // Após login bem-sucedido, redirecionar para o dashboard se for admin
+      if (data.isAdmin) {
+        window.location.href = '/admin/dashboard';
+      }
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Erro ao fazer login';
       setError(errorMessage);
@@ -71,6 +76,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: 'Registro realizado com sucesso',
         description: `Bem-vindo, ${data.nome}!`,
       });
+      
+      // Após registro bem-sucedido, redirecionar para o dashboard se for admin
+      if (data.isAdmin) {
+        window.location.href = '/admin/dashboard';
+      }
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Erro ao registrar';
       setError(errorMessage);
@@ -91,6 +101,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       title: 'Logout realizado',
       description: 'Você saiu da sua conta',
     });
+    
+    // Após logout, redirecionar para a página de login
+    window.location.href = '/admin/login';
   };
 
   return (
@@ -103,7 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
   }
   return context;
 };

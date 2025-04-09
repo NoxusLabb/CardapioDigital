@@ -1,4 +1,4 @@
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
 
@@ -13,9 +13,9 @@ export function ProtectedRoute({
   component: Component,
   adminOnly = false,
 }: ProtectedRouteProps) {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <Route path={path}>
         <div className="flex items-center justify-center min-h-screen">
@@ -28,7 +28,7 @@ export function ProtectedRoute({
   if (!user) {
     return (
       <Route path={path}>
-        <Redirect to="/auth" />
+        <Redirect to="/admin/login" />
       </Route>
     );
   }
