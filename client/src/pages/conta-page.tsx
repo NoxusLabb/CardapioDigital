@@ -4,14 +4,27 @@ import { Redirect } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, LogOut, User as UserIcon } from "lucide-react";
+import { Loader2, LogOut, User as UserIcon, HelpCircle } from "lucide-react";
+import { useOnboarding } from "@/hooks/use-onboarding";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 export default function ContaPage() {
   const { user, isLoading, logoutMutation } = useAuth();
+  const { resetOnboarding } = useOnboarding();
+  const { toast } = useToast();
 
   const handleLogout = () => {
     logoutMutation.mutate();
+  };
+  
+  const handleResetTour = () => {
+    resetOnboarding();
+    toast({
+      title: "Tour redefinido",
+      description: "Você verá o tour de orientação na próxima vez que acessar a página inicial.",
+      variant: "default",
+    });
   };
 
   // Se não estiver autenticado, redirecionar para a página de login
@@ -58,6 +71,21 @@ export default function ContaPage() {
                       <span className="text-muted-foreground">Status</span>
                       <span className="text-green-600">Ativo</span>
                     </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">Ajuda</h3>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="mb-2">Veja um tour interativo sobre como usar nosso sistema.</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-2"
+                      onClick={handleResetTour}
+                    >
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      Iniciar Tour Novamente
+                    </Button>
                   </div>
                 </div>
 

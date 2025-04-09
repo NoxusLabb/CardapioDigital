@@ -13,7 +13,7 @@ export default function CategoryNav({
   onSelectCategory 
 }: CategoryNavProps) {
   return (
-    <div className="bg-white sticky top-16 z-30 border-b shadow-sm">
+    <div className="category-nav bg-white sticky top-16 z-30 border-b shadow-sm">
       <div className="container mx-auto px-4">
         <div className="overflow-x-auto hide-scrollbar py-3">
           <div className="flex space-x-2 md:space-x-4 min-w-max">

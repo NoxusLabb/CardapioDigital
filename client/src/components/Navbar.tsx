@@ -13,7 +13,7 @@ export default function Navbar({ toggleSearch, toggleCart }: NavbarProps) {
   const { cart } = useCart();
   const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
   return (
-    <nav className="bg-white shadow-sm sticky top-0 z-40">
+    <nav className="navbar bg-white shadow-sm sticky top-0 z-40">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -50,7 +50,7 @@ export default function Navbar({ toggleSearch, toggleCart }: NavbarProps) {
             {/* Cart button - visible on desktop only */}
             <button
               onClick={toggleCart}
-              className="hidden md:flex items-center justify-center p-2 rounded-full hover:bg-gray-100 relative"
+              className="cart-button hidden md:flex items-center justify-center p-2 rounded-full hover:bg-gray-100 relative"
               aria-label="Carrinho"
             >
               <ShoppingCart className="h-5 w-5" />

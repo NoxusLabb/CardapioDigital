@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import SearchBar from "@/components/SearchBar";
@@ -7,6 +7,8 @@ import FeaturedItems from "@/components/FeaturedItems";
 import MenuItemsGrid from "@/components/MenuItemsGrid";
 import CartSidebar from "@/components/CartSidebar";
 import MobileNav from "@/components/MobileNav";
+import OnboardingTour from "@/components/OnboardingTour";
+import { useOnboarding } from "@/hooks/use-onboarding";
 import { Category, Product } from "@shared/schema";
 import { Loader2 } from "lucide-react";
 
@@ -15,6 +17,7 @@ export default function HomePage() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const { isFirstVisit } = useOnboarding();
 
   const toggleSearch = () => setIsSearchVisible(!isSearchVisible);
   const toggleCart = () => setIsCartOpen(!isCartOpen);
@@ -123,6 +126,9 @@ export default function HomePage() {
         toggleCart={toggleCart} 
         toggleSearch={toggleSearch}
       />
+      
+      {/* Tour de Onboarding */}
+      <OnboardingTour isFirstVisit={isFirstVisit} />
     </div>
   );
 }

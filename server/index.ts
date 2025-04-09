@@ -14,6 +14,8 @@ app.use(cors({
   origin: [
     'http://localhost:3000', // Frontend público
     'http://localhost:3001', // Dashboard admin
+    'http://localhost:5000', // Desenvolvimento Vite
+    'https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev', // Replit domain
   ],
   credentials: true
 }));

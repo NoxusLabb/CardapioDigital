@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, doublePrecision, timestamp, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, doublePrecision, timestamp, foreignKey, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -49,6 +49,56 @@ export const insertProductSchema = createInsertSchema(products).pick({
   ingredients: true,
 });
 
+// Status do pedido (Enum para pedidos)
+export const orderStatusEnum = pgEnum('order_status', [
+  'recebido',   // Pedido recebido pelo sistema
+  'em_preparo', // Pedido em preparo na cozinha
+  'a_caminho',  // Pedido saiu para entrega
+  'entregue'    // Pedido entregue ao cliente
+]);
+
+// Order schema - para armazenar os pedidos
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  orderNumber: text("order_number").notNull().unique(), // Código do pedido (ex: PED-1234)
+  customerName: text("customer_name").notNull(),
+  customerPhone: text("customer_phone").notNull(),
+  customerAddress: text("customer_address"),
+  status: orderStatusEnum('status').default('recebido').notNull(),
+  totalPrice: doublePrecision("total_price").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertOrderSchema = createInsertSchema(orders).pick({
+  customerName: true,
+  customerPhone: true,
+  customerAddress: true,
+  totalPrice: true,
+  notes: true
+});
+
+// OrderItem schema - para armazenar os itens de cada pedido
+export const orderItems = pgTable("order_items", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id").notNull().references(() => orders.id),
+  productId: integer("product_id").notNull().references(() => products.id),
+  productName: text("product_name").notNull(), // Armazenamos o nome para caso o produto seja deletado/alterado
+  quantity: integer("quantity").notNull(),
+  unitPrice: doublePrecision("unit_price").notNull(),
+  notes: text("notes")
+});
+
+export const insertOrderItemSchema = createInsertSchema(orderItems).pick({
+  orderId: true,
+  productId: true,
+  productName: true,
+  quantity: true,
+  unitPrice: true,
+  notes: true
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -59,15 +109,38 @@ export type Category = typeof categories.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
 
+export type InsertOrder = z.infer<typeof insertOrderSchema>;
+export type Order = typeof orders.$inferSelect;
+
+export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
+export type OrderItem = typeof orderItems.$inferSelect;
+
 // Relations
 export const categoriesRelations = relations(categories, ({ many }) => ({
   products: many(products)
 }));
 
-export const productsRelations = relations(products, ({ one }) => ({
+export const productsRelations = relations(products, ({ one, many }) => ({
   category: one(categories, {
     fields: [products.categoryId],
     references: [categories.id]
+  }),
+  orderItems: many(orderItems)
+}));
+
+// Definindo relações para os orders
+export const ordersRelations = relations(orders, ({ many }) => ({
+  items: many(orderItems)
+}));
+
+export const orderItemsRelations = relations(orderItems, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderItems.orderId],
+    references: [orders.id]
+  }),
+  product: one(products, {
+    fields: [orderItems.productId],
+    references: [products.id]
   })
 }));
 
@@ -80,4 +153,22 @@ export const productSchema = z.object({
   imageUrl: z.string().url({ message: "URL da imagem inválida" }),
   available: z.boolean(),
   ingredients: z.array(z.string()).optional(),
+});
+
+// Schemas para validação e criação de pedidos
+export const createOrderSchema = z.object({
+  customerName: z.string().min(3, { message: "Nome completo é obrigatório" }),
+  customerPhone: z.string().min(10, { message: "Telefone é obrigatório" }),
+  customerAddress: z.string().optional(),
+  items: z.array(z.object({
+    productId: z.number(),
+    quantity: z.number().min(1),
+    notes: z.string().optional()
+  })),
+  notes: z.string().optional()
+});
+
+// Schema para rastreamento de pedidos
+export const trackOrderSchema = z.object({
+  orderNumber: z.string().regex(/^PED-\d+$/, "Formato inválido. Use o formato PED-XXXX")
 });

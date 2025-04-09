@@ -1,19 +1,24 @@
+import { db, pool } from "./db";
+import { eq, like, or } from "drizzle-orm";
+import * as ExpressSession from "express-session";
+import connectPg from "connect-pg-simple";
 import { 
   users, 
   categories, 
   products, 
+  orders, 
+  orderItems, 
   type User, 
   type InsertUser,
   type Category,
   type InsertCategory,
   type Product,
-  type InsertProduct 
+  type InsertProduct,
+  type Order, 
+  type InsertOrder,
+  type OrderItem, 
+  type InsertOrderItem 
 } from "@shared/schema";
-
-import { db, pool } from "./db";
-import { eq, like, or } from "drizzle-orm";
-import * as ExpressSession from "express-session";
-import connectPg from "connect-pg-simple";
 
 // Interface with CRUD methods for our app
 export interface IStorage {
@@ -37,6 +42,27 @@ export interface IStorage {
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: number, product: Partial<InsertProduct>): Promise<Product | undefined>;
   deleteProduct(id: number): Promise<boolean>;
+  
+  // Order operations
+  createOrder(orderData: {
+    customerName: string;
+    customerPhone: string;
+    customerAddress?: string;
+    totalPrice: number;
+    notes?: string;
+    items: Array<{
+      productId: number;
+      productName: string;
+      quantity: number;
+      unitPrice: number;
+      notes?: string;
+    }>;
+  }): Promise<Order>;
+  
+  getOrderByNumber(orderNumber: string): Promise<Order | undefined>;
+  getOrderWithItems(orderId: number): Promise<{ order: Order; items: OrderItem[] } | undefined>;
+  getOrderItems(orderId: number): Promise<OrderItem[]>;
+  updateOrderStatus(orderId: number, status: 'recebido' | 'em_preparo' | 'a_caminho' | 'entregue'): Promise<Order | undefined>;
   
   // Session store
   sessionStore: ExpressSession.Store;
@@ -156,6 +182,96 @@ export class DatabaseStorage implements IStorage {
       .where(eq(products.id, id))
       .returning();
     return result.length > 0;
+  }
+
+  // Order operations
+  async createOrder(orderData: {
+    customerName: string;
+    customerPhone: string;
+    customerAddress?: string;
+    totalPrice: number;
+    notes?: string;
+    items: Array<{
+      productId: number;
+      productName: string;
+      quantity: number;
+      unitPrice: number;
+      notes?: string;
+    }>;
+  }): Promise<Order> {
+    // Gerar número de pedido único no formato PED-XXXX
+    const orderNumber = `PED-${Math.floor(1000 + Math.random() * 9000)}`;
+    
+    // Iniciar uma transação
+    return await db.transaction(async (tx) => {
+      // Criar o pedido
+      const [order] = await tx
+        .insert(orders)
+        .values({
+          orderNumber,
+          customerName: orderData.customerName,
+          customerPhone: orderData.customerPhone,
+          customerAddress: orderData.customerAddress,
+          totalPrice: orderData.totalPrice,
+          notes: orderData.notes,
+          status: 'recebido',
+        })
+        .returning();
+      
+      // Adicionar os itens do pedido
+      for (const item of orderData.items) {
+        await tx.insert(orderItems).values({
+          orderId: order.id,
+          productId: item.productId,
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          notes: item.notes,
+        });
+      }
+      
+      return order;
+    });
+  }
+  
+  async getOrderByNumber(orderNumber: string): Promise<Order | undefined> {
+    const [order] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.orderNumber, orderNumber));
+    return order;
+  }
+  
+  async getOrderWithItems(orderId: number): Promise<{ order: Order; items: OrderItem[] } | undefined> {
+    const [order] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, orderId));
+    
+    if (!order) return undefined;
+    
+    const items = await db
+      .select()
+      .from(orderItems)
+      .where(eq(orderItems.orderId, orderId));
+    
+    return { order, items };
+  }
+  
+  async getOrderItems(orderId: number): Promise<OrderItem[]> {
+    return await db
+      .select()
+      .from(orderItems)
+      .where(eq(orderItems.orderId, orderId));
+  }
+  
+  async updateOrderStatus(orderId: number, status: 'recebido' | 'em_preparo' | 'a_caminho' | 'entregue'): Promise<Order | undefined> {
+    const [updatedOrder] = await db
+      .update(orders)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(orders.id, orderId))
+      .returning();
+    return updatedOrder;
   }
 }
 
