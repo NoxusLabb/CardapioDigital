@@ -1,5 +1,6 @@
-import { Link, useLocation } from "wouter";
-import { Home, Search, ShoppingCart, User } from "lucide-react";
+import React from 'react';
+import { Menu, X, ShoppingCart, Search, Home, Info, Phone } from 'lucide-react';
+import { Link } from 'wouter';
 
 interface MobileNavProps {
   toggleSearch: () => void;
@@ -8,47 +9,117 @@ interface MobileNavProps {
 }
 
 export default function MobileNav({ toggleSearch, toggleCart, cartItemCount }: MobileNavProps) {
-  const [location] = useLocation();
-
+  const [isOpen, setIsOpen] = React.useState(false);
+  
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+  };
+  
+  const closeMenu = () => {
+    setIsOpen(false);
+  };
+  
+  const handleCartClick = () => {
+    closeMenu();
+    toggleCart();
+  };
+  
+  const handleSearchClick = () => {
+    closeMenu();
+    toggleSearch();
+  };
+  
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
-      <div className="flex justify-around">
-        <Link href="/">
-          <a className={`flex flex-col items-center py-2 px-3 ${location === '/' ? 'text-primary' : 'text-accent hover:text-primary'}`}>
-            <Home className="h-6 w-6" />
-            <span className="text-xs mt-1">Início</span>
-          </a>
-        </Link>
-        
-        <button
-          className="flex flex-col items-center py-2 px-3 text-accent hover:text-primary"
-          onClick={toggleSearch}
-        >
-          <Search className="h-6 w-6" />
-          <span className="text-xs mt-1">Buscar</span>
-        </button>
-        
-        <button
-          className="flex flex-col items-center py-2 px-3 text-accent hover:text-primary relative"
-          onClick={toggleCart}
-        >
-          <div className="relative">
-            <ShoppingCart className="h-6 w-6" />
-            {cartItemCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                {cartItemCount}
-              </span>
-            )}
+    <div className="md:hidden">
+      {/* Mobile menu button */}
+      <button
+        onClick={toggleMenu}
+        className="p-2 rounded-full hover:bg-gray-100"
+        aria-label="Menu"
+      >
+        <Menu className="h-6 w-6" />
+      </button>
+      
+      {/* Mobile menu overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-50"
+          onClick={closeMenu}
+        />
+      )}
+      
+      {/* Mobile menu panel */}
+      <div 
+        className={`fixed top-0 right-0 w-64 h-full bg-white z-50 shadow-lg transform transition-transform duration-300 ease-in-out ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="text-lg font-bold">Menu</h2>
+            <button
+              onClick={closeMenu}
+              className="p-2 rounded-full hover:bg-gray-100"
+              aria-label="Fechar menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <span className="text-xs mt-1">Carrinho</span>
-        </button>
-        
-        <Link href="/auth">
-          <a className={`flex flex-col items-center py-2 px-3 ${location === '/auth' || location === '/admin' ? 'text-primary' : 'text-accent hover:text-primary'}`}>
-            <User className="h-6 w-6" />
-            <span className="text-xs mt-1">Perfil</span>
-          </a>
-        </Link>
+          
+          {/* Nav links */}
+          <div className="flex-grow overflow-y-auto">
+            <nav className="py-4">
+              <ul className="space-y-1">
+                <li>
+                  <Link href="/" className="flex items-center px-4 py-3 hover:bg-gray-100 transition-colors" onClick={closeMenu}>
+                    <Home className="h-5 w-5 mr-3 text-primary" />
+                    <span>Cardápio</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/sobre" className="flex items-center px-4 py-3 hover:bg-gray-100 transition-colors" onClick={closeMenu}>
+                    <Info className="h-5 w-5 mr-3 text-primary" />
+                    <span>Sobre Nós</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contato" className="flex items-center px-4 py-3 hover:bg-gray-100 transition-colors" onClick={closeMenu}>
+                    <Phone className="h-5 w-5 mr-3 text-primary" />
+                    <span>Contato</span>
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+          </div>
+          
+          {/* Action buttons */}
+          <div className="border-t p-4">
+            <div className="flex space-x-2">
+              <button
+                onClick={handleSearchClick}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 transition-colors py-2 rounded-md flex items-center justify-center"
+                aria-label="Buscar"
+              >
+                <Search className="h-5 w-5 mr-2" />
+                <span>Buscar</span>
+              </button>
+              <button
+                onClick={handleCartClick}
+                className="flex-1 bg-primary hover:bg-primary/90 transition-colors py-2 rounded-md text-white flex items-center justify-center relative"
+                aria-label="Carrinho"
+              >
+                <ShoppingCart className="h-5 w-5 mr-2" />
+                <span>Carrinho</span>
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-white text-primary text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center border border-primary">
+                    {cartItemCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

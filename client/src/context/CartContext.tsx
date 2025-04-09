@@ -1,6 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { Product } from '@shared/schema';
-import { useToast } from '@/hooks/use-toast';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { Product } from '../services/productService';
 
 export interface CartItem {
   product: Product;
@@ -10,8 +9,8 @@ export interface CartItem {
 interface CartContextType {
   cart: CartItem[];
   addToCart: (product: Product) => void;
-  removeFromCart: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
+  removeFromCart: (productId: string) => void;
+  updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
 }
 
@@ -19,61 +18,67 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
-  const { toast } = useToast();
-
-  const addToCart = (product: Product) => {
-    if (!product.available) {
-      toast({
-        title: "Produto indisponível",
-        description: "Este produto não está disponível no momento.",
-        variant: "destructive",
-      });
-      return;
+  
+  // Carregar carrinho do localStorage quando o componente for montado
+  useEffect(() => {
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      try {
+        setCart(JSON.parse(savedCart));
+      } catch (error) {
+        console.error('Erro ao carregar carrinho do localStorage:', error);
+        localStorage.removeItem('cart');
+      }
     }
-
+  }, []);
+  
+  // Salvar carrinho no localStorage quando for atualizado
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }, [cart]);
+  
+  const addToCart = (product: Product) => {
     setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.product.id === product.id);
+      // Verificar se o produto já está no carrinho
+      const existingItem = prevCart.find(item => item.product._id === product._id);
       
       if (existingItem) {
-        return prevCart.map(item =>
-          item.product.id === product.id
+        // Aumentar a quantidade se o produto já estiver no carrinho
+        return prevCart.map(item => 
+          item.product._id === product._id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       } else {
+        // Adicionar novo item ao carrinho
         return [...prevCart, { product, quantity: 1 }];
       }
     });
-
-    toast({
-      title: "Produto adicionado",
-      description: `${product.name} foi adicionado ao carrinho.`,
-    });
   };
-
-  const removeFromCart = (productId: number) => {
-    setCart(prevCart => prevCart.filter(item => item.product.id !== productId));
+  
+  const removeFromCart = (productId: string) => {
+    setCart(prevCart => prevCart.filter(item => item.product._id !== productId));
   };
-
-  const updateQuantity = (productId: number, quantity: number) => {
+  
+  const updateQuantity = (productId: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(productId);
       return;
     }
-
-    setCart(prevCart =>
-      prevCart.map(item =>
-        item.product.id === productId
+    
+    setCart(prevCart => 
+      prevCart.map(item => 
+        item.product._id === productId
           ? { ...item, quantity }
           : item
       )
     );
   };
-
+  
   const clearCart = () => {
     setCart([]);
   };
-
+  
   return (
     <CartContext.Provider
       value={{
@@ -89,12 +94,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useCart() {
+// Use this hook to access the cart context
+export const useCart = () => {
   const context = useContext(CartContext);
-  
   if (context === undefined) {
     throw new Error('useCart must be used within a CartProvider');
   }
-  
   return context;
 }

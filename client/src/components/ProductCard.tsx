@@ -1,70 +1,141 @@
-import { Product } from "@shared/schema";
-import { Plus } from "lucide-react";
-import { formatCurrency } from "@/utils/formatCurrency";
-import { useCart } from "@/context/CartContext";
+import React from 'react';
+import { Product } from '../services/productService';
+import { formatCurrency } from '../utils/formatCurrency';
+import { ShoppingCart, Info } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
-  size: "small" | "large";
 }
 
-export default function ProductCard({ product, size }: ProductCardProps) {
-  const { addToCart } = useCart();
+export default function ProductCard({ product }: ProductCardProps) {
+  const [showDetails, setShowDetails] = React.useState(false);
   
-  const handleAddToCart = () => {
-    addToCart(product);
+  const toggleDetails = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowDetails(!showDetails);
   };
-
-  if (size === "large") {
-    return (
-      <div className="bg-white rounded-lg shadow-md overflow-hidden h-full">
-        <img 
-          src={product.imageUrl} 
-          alt={product.name} 
-          className="h-40 w-full object-cover"
+  
+  const addToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // This would be implemented with the real cart context
+    console.log('Add to cart:', product);
+  };
+  
+  return (
+    <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
+      <div className="relative h-48 overflow-hidden bg-gray-200">
+        <img
+          src={product.imagemUrl}
+          alt={product.nome}
+          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = 'https://via.placeholder.com/400x300?text=Imagem+Indisponível';
+          }}
         />
-        <div className="p-4">
-          <h3 className="font-bold text-lg mb-1">{product.name}</h3>
-          <p className="text-accent text-sm mb-2">{product.description}</p>
-          <div className="flex justify-between items-center">
-            <span className="font-bold text-primary">{formatCurrency(product.price)}</span>
-            <button 
-              className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center focus:outline-none hover:bg-opacity-90 transition-colors"
-              onClick={handleAddToCart}
-              aria-label="Adicionar ao carrinho"
-              disabled={!product.available}
+        
+        {/* Overlay buttons */}
+        <div className="absolute inset-0 bg-black/0 hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+          <div className="flex space-x-2">
+            <button
+              onClick={toggleDetails}
+              className="p-2 bg-white rounded-full text-gray-800 hover:bg-gray-100"
+              aria-label="Ver detalhes"
             >
-              <Plus className="h-5 w-5" />
+              <Info className="h-5 w-5" />
+            </button>
+            <button
+              onClick={addToCart}
+              className="p-2 bg-primary rounded-full text-white hover:bg-primary/90"
+              aria-label="Adicionar ao carrinho"
+            >
+              <ShoppingCart className="h-5 w-5" />
             </button>
           </div>
         </div>
       </div>
-    );
-  }
-
-  return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden flex">
-      <img 
-        src={product.imageUrl} 
-        alt={product.name} 
-        className="h-24 w-24 object-cover"
-      />
-      <div className="p-3 flex-1">
-        <h3 className="font-bold text-base mb-1">{product.name}</h3>
-        <p className="text-accent text-xs mb-2">{product.description}</p>
-        <div className="flex justify-between items-center">
-          <span className="font-bold text-primary">{formatCurrency(product.price)}</span>
-          <button 
-            className={`rounded-full w-7 h-7 flex items-center justify-center focus:outline-none transition-colors
-              ${product.available ? 'bg-primary text-white hover:bg-opacity-90' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-            onClick={handleAddToCart}
-            aria-label="Adicionar ao carrinho"
-            disabled={!product.available}
-          >
-            <Plus className="h-4 w-4" />
-          </button>
+      
+      <div className="p-4 flex-grow flex flex-col">
+        <h3 className="font-bold text-gray-800 truncate">{product.nome}</h3>
+        <p className="text-sm text-gray-500 mb-2 flex-grow line-clamp-2">{product.descricao}</p>
+        
+        <div className="mt-auto">
+          {product.ingredientes && product.ingredientes.length > 0 && (
+            <div className="text-xs text-gray-500 mb-2">
+              <span className="font-medium">Ingredientes:</span>{' '}
+              {product.ingredientes.join(', ')}
+            </div>
+          )}
+          
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-gray-900">{formatCurrency(product.preco)}</span>
+            <button
+              onClick={addToCart}
+              className="bg-primary text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-primary/90 transition-colors"
+            >
+              Adicionar
+            </button>
+          </div>
         </div>
       </div>
+      
+      {/* Details modal */}
+      {showDetails && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/70 z-50"
+            onClick={toggleDetails}
+          />
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 max-w-md w-full z-50 max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={toggleDetails}
+              className="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-100 text-gray-500"
+              aria-label="Fechar detalhes"
+            >
+              ×
+            </button>
+            
+            <div className="h-48 -mx-6 -mt-6 mb-4 bg-gray-200">
+              <img
+                src={product.imagemUrl}
+                alt={product.nome}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = 'https://via.placeholder.com/400x300?text=Imagem+Indisponível';
+                }}
+              />
+            </div>
+            
+            <h2 className="text-xl font-bold text-gray-800 mb-2">{product.nome}</h2>
+            <p className="text-gray-500 mb-4">{product.descricao}</p>
+            
+            {product.ingredientes && product.ingredientes.length > 0 && (
+              <div className="mb-4">
+                <h3 className="font-bold text-gray-700 mb-1">Ingredientes</h3>
+                <ul className="list-disc pl-5 text-gray-600 text-sm">
+                  {product.ingredientes.map((ingrediente, index) => (
+                    <li key={index}>{ingrediente}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            <div className="flex justify-between items-center mt-4 pt-4 border-t">
+              <span className="text-xl font-bold text-gray-900">{formatCurrency(product.preco)}</span>
+              <button
+                onClick={(e) => {
+                  addToCart(e);
+                  toggleDetails(e);
+                }}
+                className="bg-primary text-white px-4 py-2 rounded-full font-medium hover:bg-primary/90 transition-colors"
+              >
+                Adicionar ao Carrinho
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

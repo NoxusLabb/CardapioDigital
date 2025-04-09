@@ -1,125 +1,197 @@
-import { X, Plus, Minus } from "lucide-react";
-import { formatCurrency } from "@/utils/formatCurrency";
-import { useCart } from "@/context/CartContext";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import React from 'react';
+import { X, ShoppingBag, Trash2, Plus, Minus } from 'lucide-react';
+import { formatCurrency } from '../utils/formatCurrency';
+import { Product } from '../services/productService';
 
 interface CartSidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
-  const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
-  const { toast } = useToast();
+interface CartItem {
+  product: Product;
+  quantity: number;
+}
 
-  const subtotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-  const deliveryFee = 5.00; // fixed delivery fee
-  const total = subtotal + deliveryFee;
+export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
+  // Simulando items no carrinho
+  const [cartItems, setCartItems] = React.useState<CartItem[]>([]);
+  const cartTotal = cartItems.reduce((total, item) => total + (item.product.preco * item.quantity), 0);
   
-  const handleCheckout = () => {
-    toast({
-      title: "Pedido realizado!",
-      description: "Seu pedido foi recebido e está sendo processado.",
-    });
-    
-    clearCart();
+  const closeCart = () => {
     onClose();
   };
-
+  
+  const handleIncrement = (productId: string) => {
+    setCartItems(
+      cartItems.map(item =>
+        item.product._id === productId
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      )
+    );
+  };
+  
+  const handleDecrement = (productId: string) => {
+    setCartItems(
+      cartItems.map(item =>
+        item.product._id === productId && item.quantity > 1
+          ? { ...item, quantity: item.quantity - 1 }
+          : item
+      )
+    );
+  };
+  
+  const handleRemove = (productId: string) => {
+    setCartItems(cartItems.filter(item => item.product._id !== productId));
+  };
+  
+  const clearCart = () => {
+    setCartItems([]);
+  };
+  
+  const checkout = () => {
+    alert('Função de checkout ainda não implementada');
+  };
+  
   return (
-    <div 
-      className={`fixed inset-y-0 right-0 w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${
-        isOpen ? 'translate-x-0' : 'translate-x-full'
-      }`}
-    >
-      <div className="h-full flex flex-col">
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-lg font-bold">Seu Pedido</h2>
-          <button 
-            className="text-accent hover:text-text" 
-            onClick={onClose}
-            aria-label="Fechar carrinho"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-4">
-          {/* Empty cart message */}
-          {cart.length === 0 && (
-            <div className="text-center py-8">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-accent mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <p className="text-accent">Seu carrinho está vazio</p>
-              <p className="text-sm text-accent mt-2">Adicione itens para fazer seu pedido</p>
-            </div>
-          )}
+    <>
+      {/* Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={closeCart}
+        />
+      )}
+      
+      {/* Cart sidebar */}
+      <div 
+        className={`fixed top-0 right-0 w-full md:w-96 h-full bg-white z-50 shadow-xl transform transition-transform duration-300 ease-in-out ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="text-lg font-bold flex items-center">
+              <ShoppingBag className="h-5 w-5 mr-2" />
+              Seu Carrinho
+            </h2>
+            <button
+              onClick={closeCart}
+              className="p-2 rounded-full hover:bg-gray-100"
+              aria-label="Fechar carrinho"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
           
-          {/* Cart items list */}
-          {cart.length > 0 && (
-            <div>
-              {cart.map((item) => (
-                <div key={item.product.id} className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
-                  <img 
-                    src={item.product.imageUrl} 
-                    alt={item.product.name} 
-                    className="h-16 w-16 rounded-md object-cover"
-                  />
-                  <div className="flex-1">
-                    <h4 className="font-medium">{item.product.name}</h4>
-                    <p className="text-primary font-medium text-sm">{formatCurrency(item.product.price)}</p>
+          {/* Cart items */}
+          <div className="flex-grow overflow-y-auto p-4">
+            {cartItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <ShoppingBag className="h-16 w-16 mb-4 text-gray-300" />
+                <p className="mb-2">Seu carrinho está vazio</p>
+                <p className="text-sm">Adicione itens do cardápio para começar</p>
+              </div>
+            ) : (
+              <ul className="space-y-4">
+                {cartItems.map((item) => (
+                  <li key={item.product._id} className="flex border-b pb-4">
+                    <div className="h-20 w-20 bg-gray-200 rounded overflow-hidden mr-3 flex-shrink-0">
+                      <img 
+                        src={item.product.imagemUrl}
+                        alt={item.product.nome}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://via.placeholder.com/80?text=Imagem+Indisponível';
+                        }}
+                      />
+                    </div>
+                    
+                    <div className="flex-grow">
+                      <h3 className="font-medium mb-1 pr-6">{item.product.nome}</h3>
+                      <p className="text-gray-600 text-sm mb-2">{formatCurrency(item.product.preco)}</p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center border rounded">
+                          <button 
+                            onClick={() => handleDecrement(item.product._id)}
+                            className="p-1 hover:bg-gray-100"
+                            aria-label="Diminuir quantidade"
+                            disabled={item.quantity <= 1}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </button>
+                          <span className="px-2 py-1 min-w-[30px] text-center">{item.quantity}</span>
+                          <button 
+                            onClick={() => handleIncrement(item.product._id)}
+                            className="p-1 hover:bg-gray-100"
+                            aria-label="Aumentar quantidade"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
+                        
+                        <button 
+                          onClick={() => handleRemove(item.product._id)}
+                          className="p-1 text-gray-500 hover:text-red-500"
+                          aria-label="Remover item"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          
+          {/* Cart footer */}
+          <div className="border-t p-4">
+            {cartItems.length > 0 && (
+              <>
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>{formatCurrency(cartTotal)}</span>
                   </div>
-                  <div className="flex items-center">
-                    <button 
-                      className="text-accent hover:text-text w-8 h-8 flex items-center justify-center"
-                      onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                      aria-label="Diminuir quantidade"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <span className="w-6 text-center">{item.quantity}</span>
-                    <button 
-                      className="text-accent hover:text-text w-8 h-8 flex items-center justify-center"
-                      onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                      aria-label="Aumentar quantidade"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
+                  <div className="flex justify-between font-bold">
+                    <span>Total</span>
+                    <span>{formatCurrency(cartTotal)}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-        
-        {cart.length > 0 && (
-          <div className="p-4 border-t border-gray-200">
-            <div className="mb-4">
-              <div className="flex justify-between mb-2">
-                <span className="text-accent">Subtotal</span>
-                <span className="font-medium">{formatCurrency(subtotal)}</span>
-              </div>
-              <div className="flex justify-between mb-2">
-                <span className="text-accent">Taxa de entrega</span>
-                <span className="font-medium">{formatCurrency(deliveryFee)}</span>
-              </div>
-              <div className="flex justify-between font-bold text-lg">
-                <span>Total</span>
-                <span className="text-primary">{formatCurrency(total)}</span>
-              </div>
-            </div>
+                
+                <div className="space-y-2">
+                  <button
+                    onClick={checkout}
+                    className="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg font-medium transition-colors"
+                  >
+                    Finalizar Pedido
+                  </button>
+                  <button
+                    onClick={clearCart}
+                    className="w-full border border-gray-300 hover:bg-gray-100 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Limpar Carrinho
+                  </button>
+                </div>
+              </>
+            )}
             
-            <Button 
-              className="w-full py-3 bg-primary text-white hover:bg-primary/90"
-              onClick={handleCheckout}
-            >
-              Finalizar Pedido
-            </Button>
+            {cartItems.length === 0 && (
+              <button
+                onClick={closeCart}
+                className="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg font-medium transition-colors"
+              >
+                Continuar Comprando
+              </button>
+            )}
           </div>
-        )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

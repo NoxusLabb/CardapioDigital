@@ -1,251 +1,387 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Category, Product } from "@shared/schema";
-import { useAuth } from "@/hooks/use-auth";
-import { Link, useLocation } from "wouter";
-import { Loader2, PlusCircle, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { formatCurrency } from "@/utils/formatCurrency";
-import ProductForm from "./product-form";
+import React, { useState, useEffect } from 'react';
+import {
+  Typography,
+  Box,
+  Grid,
+  Paper,
+  Card,
+  CardContent,
+  CardHeader,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Avatar,
+  Chip,
+  CircularProgress,
+  Button,
+} from '@mui/material';
+import {
+  Restaurant,
+  Category as CategoryIcon,
+  AttachMoney,
+  ListAlt,
+  TrendingUp,
+} from '@mui/icons-material';
+import { productsAPI } from '../../utils/api';
+import AdminLayout from '../../components/admin/AdminLayout';
+import { useLocation } from 'wouter';
+import { useAuth } from '../../context/AuthContext';
+import { formatCurrency } from '@/utils/formatCurrency';
 
-export default function Dashboard() {
-  const { user, logoutMutation } = useAuth();
-  const { toast } = useToast();
-  const [, setLocation] = useLocation();
-  const [activeTab, setActiveTab] = useState("produtos");
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+interface Produto {
+  _id: string;
+  nome: string;
+  descricao: string;
+  preco: number;
+  categoria: string;
+  imagemUrl: string;
+  disponivel: boolean;
+  ingredientes: string[];
+}
 
-  // Fetch products
-  const { 
-    data: products,
-    isLoading: productsLoading,
-  } = useQuery<Product[]>({
-    queryKey: ["/api/products"],
-  });
+export default function DashboardPage() {
+  const [loading, setLoading] = useState(true);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [location, navigate] = useLocation();
+  const { user } = useAuth();
 
-  // Fetch categories
-  const { 
-    data: categories,
-    isLoading: categoriesLoading,
-  } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
-  });
+  useEffect(() => {
+    if (!user || !user.isAdmin) {
+      navigate('/admin/login');
+      return;
+    }
+    
+    fetchData();
+  }, [user, navigate]);
 
-  // Delete product mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/admin/products/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      toast({
-        title: "Produto excluído",
-        description: "O produto foi excluído com sucesso.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Erro ao excluir",
-        description: "Não foi possível excluir o produto.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleLogout = () => {
-    logoutMutation.mutate();
-    setLocation("/");
-  };
-
-  const handleDeleteProduct = (id: number) => {
-    if (confirm("Tem certeza que deseja excluir este produto?")) {
-      deleteMutation.mutate(id);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await productsAPI.getAll();
+      setProdutos(data);
+    } catch (err: any) {
+      console.error('Erro ao buscar dados:', err);
+      setError(err.response?.data?.message || 'Erro ao carregar dados');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    setIsFormOpen(true);
+  // Calcular estatísticas
+  const calcularEstatisticas = () => {
+    const totalProdutos = produtos.length;
+    const produtosAtivos = produtos.filter(p => p.disponivel).length;
+    
+    // Agrupar por categoria
+    const categorias = [...new Set(produtos.map(p => p.categoria))];
+    const totalCategorias = categorias.length;
+    
+    // Produtos mais caros
+    const produtosMaisCaros = [...produtos]
+      .sort((a, b) => b.preco - a.preco)
+      .slice(0, 5);
+    
+    return {
+      totalProdutos,
+      produtosAtivos,
+      totalCategorias,
+      categorias,
+      produtosMaisCaros,
+    };
   };
 
-  const handleAddProduct = () => {
-    setEditingProduct(null);
-    setIsFormOpen(true);
+  const navegarParaProdutos = () => {
+    navigate('/admin/produtos');
   };
 
-  const getCategoryName = (categoryId: number) => {
-    const category = categories?.find(c => c.id === categoryId);
-    return category?.name || "Categoria desconhecida";
-  };
-
-  if (productsLoading || categoriesLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-secondary" />
-      </div>
+      <AdminLayout title="Dashboard">
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <CircularProgress />
+        </Box>
+      </AdminLayout>
     );
   }
 
+  const {
+    totalProdutos,
+    produtosAtivos,
+    totalCategorias,
+    categorias,
+    produtosMaisCaros,
+  } = calcularEstatisticas();
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Admin Navbar */}
-      <nav className="bg-white shadow-md sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="flex items-center">
-            <h1 className="text-xl font-bold text-secondary">Painel Administrativo</h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-accent">{user?.username}</span>
-            <button 
-              className="text-accent hover:text-text" 
-              onClick={handleLogout}
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      </nav>
+    <AdminLayout title="Dashboard">
+      <Box mb={4}>
+        <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
+          Dashboard Administrativo
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary" paragraph>
+          Visão geral do seu cardápio digital
+        </Typography>
+      </Box>
 
-      {/* Admin Content */}
-      <main className="container mx-auto px-4 py-6">
-        <Tabs defaultValue="produtos" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6 border-b border-gray-200 w-full justify-start">
-            <TabsTrigger value="produtos" className="py-2 px-4">
-              Produtos
-            </TabsTrigger>
-            <TabsTrigger value="categorias" className="py-2 px-4">
-              Categorias
-            </TabsTrigger>
-          </TabsList>
+      {/* Cartões de resumo */}
+      <Grid container spacing={3} mb={4}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card 
+            elevation={2}
+            sx={{ 
+              borderRadius: 2,
+              backgroundColor: '#fff',
+              height: '100%'
+            }}
+          >
+            <CardContent>
+              <Box display="flex" alignItems="center" mb={1}>
+                <Avatar
+                  sx={{
+                    bgcolor: '#FF5A5F',
+                    width: 40,
+                    height: 40,
+                    mr: 2,
+                  }}
+                >
+                  <Restaurant />
+                </Avatar>
+                <Typography variant="h6" component="div">
+                  Produtos
+                </Typography>
+              </Box>
+              <Typography variant="h3" component="div" fontWeight="bold">
+                {totalProdutos}
+              </Typography>
+              <Box display="flex" alignItems="center" mt={1}>
+                <Chip 
+                  label={`${produtosAtivos} ativos`}
+                  size="small"
+                  color="success"
+                  sx={{ mr: 1 }}
+                />
+                <Chip 
+                  label={`${totalProdutos - produtosAtivos} inativos`}
+                  size="small"
+                  color="error"
+                />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
 
-          <TabsContent value="produtos" className="space-y-4">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">Gerenciar Produtos</h2>
-              <Button 
-                className="bg-secondary text-white hover:bg-secondary/90"
-                onClick={handleAddProduct}
-              >
-                <PlusCircle className="h-5 w-5 mr-1" />
-                Adicionar Produto
-              </Button>
-            </div>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card 
+            elevation={2} 
+            sx={{ 
+              borderRadius: 2,
+              backgroundColor: '#fff',
+              height: '100%' 
+            }}
+          >
+            <CardContent>
+              <Box display="flex" alignItems="center" mb={1}>
+                <Avatar
+                  sx={{
+                    bgcolor: '#00A699',
+                    width: 40,
+                    height: 40,
+                    mr: 2,
+                  }}
+                >
+                  <CategoryIcon />
+                </Avatar>
+                <Typography variant="h6" component="div">
+                  Categorias
+                </Typography>
+              </Box>
+              <Typography variant="h3" component="div" fontWeight="bold">
+                {totalCategorias}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Organização do cardápio
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
 
-            {/* Products Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Produto
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Categoria
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Preço
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Ações
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {products && products.map(product => (
-                      <tr key={product.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0">
-                              <img 
-                                className="h-10 w-10 rounded-md object-cover" 
-                                src={product.imageUrl} 
-                                alt={product.name} 
-                              />
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-text">{product.name}</div>
-                              <div className="text-sm text-accent">{product.description.substring(0, 30)}...</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-text">{getCategoryName(product.categoryId)}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-text">{formatCurrency(product.price)}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${product.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                            {product.available ? 'Disponível' : 'Indisponível'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-accent">
-                          <div className="flex space-x-2">
-                            <button 
-                              className="text-secondary hover:text-opacity-80"
-                              onClick={() => handleEditProduct(product)}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
-                            </button>
-                            <button 
-                              className="text-primary hover:text-opacity-80"
-                              onClick={() => handleDeleteProduct(product.id)}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {products && products.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
-                          Nenhum produto cadastrado
-                        </td>
-                      </tr>
+        <Grid item xs={12} md={6}>
+          <Card 
+            elevation={2} 
+            sx={{ 
+              borderRadius: 2,
+              backgroundColor: '#fff',
+              height: '100%' 
+            }}
+          >
+            <CardContent>
+              <Box display="flex" alignItems="center" mb={1}>
+                <Avatar
+                  sx={{
+                    bgcolor: '#484848',
+                    width: 40,
+                    height: 40,
+                    mr: 2,
+                  }}
+                >
+                  <TrendingUp />
+                </Avatar>
+                <Typography variant="h6" component="div">
+                  Visão Geral
+                </Typography>
+              </Box>
+              <Box display="flex" justifyContent="space-around" mt={2}>
+                <Box textAlign="center">
+                  <Typography variant="body2" color="text.secondary">
+                    Produtos Ativos
+                  </Typography>
+                  <Typography variant="h6" fontWeight="bold">
+                    {Math.round((produtosAtivos / totalProdutos) * 100)}%
+                  </Typography>
+                </Box>
+                <Divider orientation="vertical" flexItem />
+                <Box textAlign="center">
+                  <Typography variant="body2" color="text.secondary">
+                    Preço Médio
+                  </Typography>
+                  <Typography variant="h6" fontWeight="bold">
+                    {formatCurrency(
+                      produtos.reduce((acc, curr) => acc + curr.preco, 0) / totalProdutos
                     )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </TabsContent>
+                  </Typography>
+                </Box>
+                <Divider orientation="vertical" flexItem />
+                <Box textAlign="center">
+                  <Typography variant="body2" color="text.secondary">
+                    Média Ingredientes
+                  </Typography>
+                  <Typography variant="h6" fontWeight="bold">
+                    {Math.round(
+                      produtos.reduce((acc, curr) => acc + curr.ingredientes.length, 0) / totalProdutos
+                    )}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
-          <TabsContent value="categorias">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">Gerenciar Categorias</h2>
-              <Button className="bg-secondary text-white hover:bg-secondary/90">
-                <PlusCircle className="h-5 w-5 mr-1" />
-                Adicionar Categoria
-              </Button>
-            </div>
+      <Grid container spacing={3}>
+        {/* Lista de Categorias */}
+        <Grid item xs={12} md={6}>
+          <Paper 
+            elevation={2} 
+            sx={{ 
+              borderRadius: 2,
+              p: 2,
+              height: '100%' 
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              Categorias de Produtos
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            
+            <Grid container spacing={1}>
+              {categorias.map((categoria) => {
+                const produtosNaCategoria = produtos.filter(p => p.categoria === categoria).length;
+                return (
+                  <Grid item xs={6} key={categoria}>
+                    <Card variant="outlined" sx={{ mb: 1 }}>
+                      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                        <Typography variant="body1" fontWeight="medium">
+                          {categoria}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {produtosNaCategoria} {produtosNaCategoria === 1 ? 'produto' : 'produtos'}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </Paper>
+        </Grid>
 
-            {/* Categories list placeholder */}
-            <div className="bg-white rounded-lg shadow p-6">
-              <p className="text-accent">Funcionalidade em desenvolvimento.</p>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </main>
+        {/* Produtos mais caros */}
+        <Grid item xs={12} md={6}>
+          <Paper 
+            elevation={2} 
+            sx={{ 
+              borderRadius: 2,
+              p: 2,
+              height: '100%' 
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              Produtos mais caros
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            
+            <List>
+              {produtosMaisCaros.map((produto) => (
+                <React.Fragment key={produto._id}>
+                  <ListItem alignItems="flex-start">
+                    <ListItemAvatar>
+                      <Avatar 
+                        alt={produto.nome} 
+                        src={produto.imagemUrl}
+                        variant="rounded"
+                        sx={{ width: 50, height: 50 }}
+                      />
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={produto.nome}
+                      secondary={
+                        <React.Fragment>
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            color="text.primary"
+                          >
+                            {formatCurrency(produto.preco)}
+                          </Typography>
+                          {" — "}{produto.categoria}
+                        </React.Fragment>
+                      }
+                    />
+                    <Chip 
+                      label={produto.disponivel ? "Disponível" : "Indisponível"} 
+                      color={produto.disponivel ? "success" : "error"} 
+                      size="small" 
+                    />
+                  </ListItem>
+                  <Divider variant="inset" component="li" />
+                </React.Fragment>
+              ))}
+            </List>
+          </Paper>
+        </Grid>
+      </Grid>
 
-      {/* Product Form Modal */}
-      {isFormOpen && (
-        <ProductForm 
-          product={editingProduct} 
-          categories={categories || []} 
-          onClose={() => setIsFormOpen(false)} 
-        />
-      )}
-    </div>
+      <Box mt={4} textAlign="center">
+        <Button 
+          variant="contained" 
+          size="large"
+          onClick={navegarParaProdutos}
+          sx={{ 
+            backgroundColor: '#FF5A5F',
+            '&:hover': {
+              backgroundColor: '#E04B50',
+            },
+            px: 4,
+            py: 1
+          }}
+        >
+          Gerenciar Produtos
+        </Button>
+      </Box>
+    </AdminLayout>
   );
 }
