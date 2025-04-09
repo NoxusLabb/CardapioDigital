@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios from 'axios';
 
 // Criar uma instância do axios
 const api = axios.create({
@@ -6,14 +6,22 @@ const api = axios.create({
 });
 
 // Interceptor para adicionar o token de autenticação
-api.interceptors.request.use((config: AxiosRequestConfig) => {
-  const userInfo = localStorage.getItem('userInfo');
-  if (userInfo) {
-    const token = JSON.parse(userInfo).token;
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
+api.interceptors.request.use((config) => {
+  // Verifica se estamos no browser antes de tentar acessar localStorage
+  if (typeof window !== 'undefined') {
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      try {
+        const token = JSON.parse(userInfo).token;
+        // Garantir que headers existe
+        if (!config.headers) {
+          config.headers = {};
+        }
+        config.headers.Authorization = `Bearer ${token}`;
+      } catch (e) {
+        console.error('Erro ao processar token:', e);
+      }
+    }
   }
   return config;
 });

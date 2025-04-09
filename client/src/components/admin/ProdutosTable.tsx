@@ -90,28 +90,57 @@ export default function ProdutosTable({
   // Formatar produtos para interface UI
   useEffect(() => {
     if (produtos && produtos.length > 0) {
+      console.log("Produtos recebidos:", produtos);
       const formatados = produtos.map(produto => {
         // Verificar o formato do produto baseado nas propriedades
-        if ('id' in produto) {
-          // É um produto da API Drizzle
-          const drizzleProduto = produto as DrizzleProduct;
+        if (produto === null || produto === undefined) {
+          console.error("Produto inválido:", produto);
+          return null;
+        }
+        
+        // Log detalhado para debug
+        console.log("Processando produto:", produto);
+        
+        // É um produto da API Drizzle (tem 'name' em vez de 'nome')
+        if ('name' in produto) {
           return {
-            _id: String(drizzleProduto.id),
-            nome: drizzleProduto.name,
-            descricao: drizzleProduto.description,
-            preco: drizzleProduto.price,
-            categoria: drizzleProduto.category || String(drizzleProduto.categoryId),
-            imagemUrl: drizzleProduto.imageUrl,
-            disponivel: drizzleProduto.available,
-            ingredientes: drizzleProduto.ingredients || [],
+            _id: String(produto.id || ''),
+            id: produto.id,
+            nome: produto.name || 'Sem nome',
+            descricao: produto.description || 'Sem descrição',
+            preco: typeof produto.price === 'number' ? produto.price : 0,
+            categoria: produto.category || `Categoria ${produto.categoryId || 1}`,
+            imagemUrl: produto.imageUrl || 'https://via.placeholder.com/150',
+            disponivel: produto.available !== undefined ? produto.available : false,
+            ingredientes: Array.isArray(produto.ingredients) ? produto.ingredients : [],
           };
-        } else {
-          // É um produto já no formato antigo, não precisa converter
+        } 
+        // É um produto já no formato antigo
+        else if ('nome' in produto) {
           return produto as ProdutoUI;
         }
-      });
+        // Formato desconhecido, tentar converter o melhor possível
+        else {
+          console.warn("Formato de produto desconhecido:", produto);
+          return {
+            _id: String(produto.id || produto._id || ''),
+            id: produto.id || 0,
+            nome: produto.nome || produto.name || 'Produto sem nome',
+            descricao: produto.descricao || produto.description || 'Sem descrição',
+            preco: produto.preco || produto.price || 0,
+            categoria: produto.categoria || produto.category || 'Sem categoria',
+            imagemUrl: produto.imagemUrl || produto.imageUrl || 'https://via.placeholder.com/150',
+            disponivel: produto.disponivel !== undefined ? produto.disponivel : 
+                      (produto.available !== undefined ? produto.available : false),
+            ingredientes: produto.ingredientes || produto.ingredients || [],
+          };
+        }
+      }).filter(Boolean); // Filtrar itens null
+      
+      console.log("Produtos formatados:", formatados);
       setProdutosFormatados(formatados);
     } else {
+      console.log("Nenhum produto recebido");
       setProdutosFormatados([]);
     }
   }, [produtos]);

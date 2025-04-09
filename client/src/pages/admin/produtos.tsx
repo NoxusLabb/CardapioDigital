@@ -125,19 +125,48 @@ export default function ProdutosPage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await productsAPI.getAll();
       
-      // Mapear produtos da API para o formato UI
-      const produtosFormatados = data.map(mapApiToUiProduct);
-      setProdutos(produtosFormatados);
+      console.log('Buscando produtos...');
+      const data = await productsAPI.getAll();
+      console.log('Dados recebidos da API:', data);
+      
+      if (!data || data.length === 0) {
+        console.warn('Nenhum produto recebido da API');
+        setProdutos([]);
+        setCategorias([]);
+        return;
+      }
+      
+      // Verificar se os dados são válidos
+      if (!Array.isArray(data)) {
+        console.error('Dados recebidos da API não são um array:', data);
+        toast({
+          title: 'Erro ao carregar produtos',
+          description: 'Formato de dados inválido recebido da API',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Mapear produtos da API diretamente (sem transformação prévia)
+      setProdutos(data);
       
       // Extrair categorias únicas
       const categoriasSet = new Set<string>();
       data.forEach((produto: any) => {
-        const categoria = produto.category || `Categoria ${produto.categoryId || 1}`;
-        categoriasSet.add(categoria);
+        try {
+          if (produto) {
+            const categoria = produto.category || `Categoria ${produto.categoryId || 1}`;
+            categoriasSet.add(categoria);
+          }
+        } catch (e) {
+          console.error('Erro ao processar categoria do produto:', produto, e);
+        }
       });
-      setCategorias(Array.from(categoriasSet));
+      
+      const categoriasArray = Array.from(categoriasSet);
+      console.log('Categorias extraídas:', categoriasArray);
+      setCategorias(categoriasArray);
     } catch (err: any) {
       console.error('Erro ao buscar produtos:', err);
       setError(err.response?.data?.message || 'Erro ao carregar produtos');
