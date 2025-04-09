@@ -1,0 +1,28 @@
+[vite] connecting...
+[vite] connected.
+Warning: Failed prop type: The following props are not supported: `data-replit-metadata`, `data-component-name`. Please remove them.
+    at ThemeProvider3 (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6YW4MCJR.js?v=5e764264:6025:5)
+    at ThemeProviderNoVars (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S7RJTNGX.js?v=5e764264:275:10)
+    at ThemeProvider (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S7RJTNGX.js?v=5e764264:357:3)
+    at QueryClientProvider (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=5e764264:2805:3)
+    at App
+Warning: Invalid prop &#x60;data-replit-metadata&#x60; supplied to &#x60;React.Fragment&#x60;. React.Fragment can only have &#x60;key&#x60; and &#x60;children&#x60; props.
+    at DashboardPage (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/src/pages/admin/dashboard.tsx?t=1744224918056:48:33)
+    at Route (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=5e764264:191:16)
+    at ProtectedRoute (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/src/lib/protected-route.tsx?t=1744224068249:22:3)
+    at Switch (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=5e764264:247:17)
+    at Router
+    at CartProvider (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/src/context/CartContext.tsx:20:32)
+    at AuthProvider (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/src/hooks/use-auth.tsx:26:32)
+    at DefaultPropsProvider (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6YW4MCJR.js?v=5e764264:5942:3)
+    at RtlProvider (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6YW4MCJR.js?v=5e764264:5918:3)
+    at ThemeProvider2 (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6YW4MCJR.js?v=5e764264:5874:5)
+    at ThemeProvider3 (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6YW4MCJR.js?v=5e764264:6025:5)
+    at ThemeProviderNoVars (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S7RJTNGX.js?v=5e764264:275:10)
+    at ThemeProvider (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S7RJTNGX.js?v=5e764264:357:3)
+    at QueryClientProvider (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=5e764264:2805:3)
+    at App
+MUI Grid: The `item` prop has been removed and is no longer necessary. You can safely remove it.
+MUI Grid: The `xs` prop has been removed. See https://mui.com/material-ui/migration/upgrade-to-grid-v2/ for migration instructions.
+MUI Grid: The `sm` prop has been removed. See https://mui.com/material-ui/migration/upgrade-to-grid-v2/ for migration instructions.
+MUI Grid: The `md` prop has been removed. See https://mui.com/material-ui/migration/upgrade-to-grid-v2/ for migration instructions.

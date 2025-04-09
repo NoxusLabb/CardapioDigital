@@ -54,7 +54,7 @@ export default function PedidosPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("todos");
   
   const { data: orders, isLoading } = useQuery<OrderWithItems[]>({
     queryKey: ['/api/admin/orders'],
@@ -87,9 +87,9 @@ export default function PedidosPage() {
   };
 
   // Filtra os pedidos pelo status, se houver um filtro selecionado
-  const filteredOrders = statusFilter
-    ? orders?.filter(order => order.status === statusFilter)
-    : orders;
+  const filteredOrders = statusFilter === "todos"
+    ? orders
+    : orders?.filter(order => order.status === statusFilter);
   
   if (isLoading) {
     return (
@@ -108,14 +108,14 @@ export default function PedidosPage() {
         
         <div className="flex items-center gap-2">
           <Select
-            value={statusFilter || ''}
-            onValueChange={(value) => setStatusFilter(value || null)}
+            value={statusFilter}
+            onValueChange={(value) => setStatusFilter(value)}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="todos">Todos</SelectItem>
               <SelectItem value="recebido">Recebido</SelectItem>
               <SelectItem value="em_preparo">Em Preparo</SelectItem>
               <SelectItem value="a_caminho">A Caminho</SelectItem>
@@ -130,7 +130,7 @@ export default function PedidosPage() {
           <ClipboardList className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
           <h3 className="text-lg font-medium">Nenhum pedido encontrado</h3>
           <p className="text-muted-foreground">
-            {statusFilter 
+            {statusFilter !== "todos" 
               ? `Não há pedidos com o status "${statusLabels[statusFilter]}".`
               : 'Ainda não há pedidos registrados no sistema.'}
           </p>

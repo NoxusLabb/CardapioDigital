@@ -174,8 +174,17 @@ export default function DashboardPage() {
       </Box>
 
       {/* Cartões de resumo */}
-      <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} sm={6} md={3}>
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: { 
+          xs: '1fr',
+          sm: 'repeat(2, 1fr)', 
+          md: 'repeat(4, 1fr)' 
+        },
+        gap: 3,
+        mb: 4
+      }}>
+        <Box sx={{ gridColumn: { xs: '1', sm: '1', md: '1' } }}>
           <Card 
             elevation={2}
             sx={{ 
@@ -218,9 +227,9 @@ export default function DashboardPage() {
               </Box>
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Box sx={{ gridColumn: { xs: '1', sm: '2', md: '2' } }}>
           <Card 
             elevation={2} 
             sx={{ 
@@ -253,9 +262,9 @@ export default function DashboardPage() {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} md={6}>
+        <Box sx={{ gridColumn: { xs: '1', sm: '1 / span 2', md: '3 / span 2' } }}>
           <Card 
             elevation={2} 
             sx={{ 
@@ -322,12 +331,19 @@ export default function DashboardPage() {
               </Box>
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
-      <Grid container spacing={3}>
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: { 
+          xs: '1fr',
+          md: 'repeat(2, 1fr)',
+        },
+        gap: 3,
+      }}>
         {/* Lista de Categorias */}
-        <Grid item xs={12} md={6}>
+        <Box>
           <Paper 
             elevation={2} 
             sx={{ 
@@ -341,7 +357,11 @@ export default function DashboardPage() {
             </Typography>
             <Divider sx={{ mb: 2 }} />
             
-            <Grid container spacing={1}>
+            <Box sx={{ 
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 1
+            }}>
               {categorias.map((categoria) => {
                 // Verificar category ou categoria conforme disponível
                 const produtosNaCategoria = produtos.filter(p => {
@@ -349,7 +369,7 @@ export default function DashboardPage() {
                   return cat === categoria;
                 }).length;
                 return (
-                  <Grid item xs={6} key={categoria}>
+                  <Box key={categoria}>
                     <Card variant="outlined" sx={{ mb: 1 }}>
                       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                         <Typography variant="body1" fontWeight="medium">
@@ -360,15 +380,15 @@ export default function DashboardPage() {
                         </Typography>
                       </CardContent>
                     </Card>
-                  </Grid>
+                  </Box>
                 );
               })}
-            </Grid>
+            </Box>
           </Paper>
-        </Grid>
+        </Box>
 
         {/* Produtos mais caros */}
-        <Grid item xs={12} md={6}>
+        <Box>
           <Paper 
             elevation={2} 
             sx={{ 
@@ -393,7 +413,7 @@ export default function DashboardPage() {
                 const disponivel = produto.available !== undefined ? produto.available : produto.disponivel || false;
                 
                 return (
-                  <React.Fragment key={id || Math.random().toString()}>
+                  <Box key={id || Math.random().toString()}>
                     <ListItem alignItems="flex-start">
                       <ListItemAvatar>
                         <Avatar 
@@ -406,7 +426,7 @@ export default function DashboardPage() {
                       <ListItemText
                         primary={nome}
                         secondary={
-                          <React.Fragment>
+                          <>
                             <Typography
                               component="span"
                               variant="body2"
@@ -415,7 +435,7 @@ export default function DashboardPage() {
                               {formatCurrency(preco)}
                             </Typography>
                             {" — "}{categoria}
-                          </React.Fragment>
+                          </>
                         }
                       />
                       <Chip 
@@ -425,13 +445,13 @@ export default function DashboardPage() {
                       />
                     </ListItem>
                     <Divider variant="inset" component="li" />
-                  </React.Fragment>
+                  </Box>
                 );
               })}
             </List>
           </Paper>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       <Box mt={4} textAlign="center">
         <Button 
