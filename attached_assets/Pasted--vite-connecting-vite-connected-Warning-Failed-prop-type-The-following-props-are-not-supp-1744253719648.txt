@@ -1,0 +1,19 @@
+[vite] connecting...
+[vite] connected.
+Warning: Failed prop type: The following props are not supported: `data-replit-metadata`, `data-component-name`. Please remove them.
+    at ThemeProvider3 (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6YW4MCJR.js?v=d0e21b1a:6025:5)
+    at ThemeProviderNoVars (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S7RJTNGX.js?v=d0e21b1a:275:10)
+    at ThemeProvider (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S7RJTNGX.js?v=d0e21b1a:357:3)
+    at QueryClientProvider (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=d0e21b1a:2805:3)
+    at App
+at ThemeProvider3 (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6YW4MCJR.js?v=d0e21b1a:6025:5)
+at ThemeProviderNoVars (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S7RJTNGX.js?v=d0e21b1a:275:10)
+at ThemeProvider (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S7RJTNGX.js?v=d0e21b1a:357:3)
+at QueryClientProvider (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=d0e21b1a:2805:3)
+at App
+at t.value (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://03ed5cdd-509b-4bde-aa5b-94afabf9d48c-00-26xyhimyrqbke.kirk.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+[vite] hot updated: /src/components/FeaturedItems.tsx
+[vite] hot updated: /src/index.css?v=d9qGh0PVwyOCWh26vdzqn

@@ -33,6 +33,9 @@ function Router() {
 }
 
 function App() {
+  // Optamos por ignorar os avisos de propriedades do ThemeProvider
+  // pois são apenas warnings gerados pelo ambiente Replit
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
