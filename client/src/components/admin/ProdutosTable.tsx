@@ -289,9 +289,10 @@ export default function ProdutosTable({
                       alt={produto.nome}
                       className="h-12 w-12 rounded-md object-cover"
                       onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                        e.currentTarget.src = 'https://via.placeholder.com/50x50?text=Erro';
+                        const target = e.currentTarget;
+                        target.src = 'https://via.placeholder.com/50x50?text=Sem+Imagem';
                         // Prevenir loop infinito
-                        e.currentTarget.onerror = null;
+                        target.onerror = null;
                       }}
                     />
                   </TableCell>

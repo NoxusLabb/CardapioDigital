@@ -222,9 +222,7 @@ export default function ProdutoForm({
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSave = () => {
     if (validateForm()) {
       // Converter para o formato esperado pela API
       const produtoToSubmit = {
@@ -260,7 +258,7 @@ export default function ProdutoForm({
       </DialogHeader>
       
       <DialogContent className="max-h-[80vh] overflow-y-auto">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="nome">Nome *</Label>
@@ -517,8 +515,12 @@ export default function ProdutoForm({
         <Button variant="outline" onClick={onClose}>
           Cancelar
         </Button>
-        <Button onClick={handleSubmit}>
-          {produto && (produto._id || produto.id) ? 'Atualizar' : 'Criar'}
+        <Button 
+          onClick={handleSave}
+          type="button"
+          className="bg-green-600 hover:bg-green-700"
+        >
+          {produto && (produto._id || produto.id) ? 'Salvar Alterações' : 'Criar Produto'}
         </Button>
       </DialogFooter>
     </Dialog>

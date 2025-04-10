@@ -28,9 +28,6 @@ export default function ProductCard({ product }: ProductCardProps) {
       <div className="relative h-48 overflow-hidden bg-gray-200">
         <img
           src={product.imageUrl || 'https://via.placeholder.com/400x300?text=Imagem+Indisponível'}
-          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-            e.currentTarget.src = 'https://via.placeholder.com/400x300?text=Imagem+Indisponível';
-          }}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
           onError={(e) => {
