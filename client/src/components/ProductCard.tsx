@@ -27,12 +27,14 @@ export default function ProductCard({ product }: ProductCardProps) {
     <div className="product-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
       <div className="relative h-48 overflow-hidden bg-gray-200">
         <img
-          src={product.imageUrl}
+          src={product.imageUrl || 'https://via.placeholder.com/400x300?text=Imagem+Indisponível'}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = 'https://via.placeholder.com/400x300?text=Imagem+Indisponível';
+            // Prevenir loop infinito
+            target.onerror = null;
           }}
         />
         
@@ -99,12 +101,14 @@ export default function ProductCard({ product }: ProductCardProps) {
             
             <div className="h-48 -mx-6 -mt-6 mb-4 bg-gray-200">
               <img
-                src={product.imageUrl}
+                src={product.imageUrl || 'https://via.placeholder.com/400x300?text=Imagem+Indisponível'}
                 alt={product.name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = 'https://via.placeholder.com/400x300?text=Imagem+Indisponível';
+                  // Prevenir loop infinito
+                  target.onerror = null;
                 }}
               />
             </div>
