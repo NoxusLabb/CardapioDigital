@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { formatCurrency } from '@/utils/formatCurrency';
 import { useLocation } from 'wouter';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -116,10 +117,56 @@ export default function ProdutosPage() {
   const { user } = useAuth();
   const [location, navigate] = useLocation();
 
+  // Adicionar QueryClient para melhor gerenciamento de cache
+  const queryClient = useQueryClient();
+
+  // Usar React Query para gerenciar o estado dos produtos
+  const { 
+    data: produtosData, 
+    isLoading: isLoadingProdutos,
+    error: produtosError,
+    refetch: refetchProdutos
+  } = useQuery({
+    queryKey: ['/api/products'],
+    queryFn: productsAPI.getAll,
+    staleTime: 1000 * 60, // 1 minuto
+  });
+
+  // Atualizar o estado local quando os dados do React Query mudarem
   useEffect(() => {
-    // O ProtectedRoute já verifica se o usuário é admin, não há necessidade de revalidar aqui
-    fetchProdutos();
-  }, []);
+    if (produtosData) {
+      setProdutos(produtosData);
+      
+      // Extrair categorias
+      const categoriasSet = new Set<string>();
+      produtosData.forEach((produto: any) => {
+        try {
+          if (produto) {
+            const categoria = produto.category || `Categoria ${produto.categoryId || 1}`;
+            categoriasSet.add(categoria);
+          }
+        } catch (e) {
+          console.error('Erro ao processar categoria do produto:', produto, e);
+        }
+      });
+      
+      const categoriasArray = Array.from(categoriasSet);
+      setCategorias(categoriasArray);
+    }
+    
+    setLoading(isLoadingProdutos);
+    
+    if (produtosError) {
+      const errorMessage = (produtosError as any)?.response?.data?.message || 'Erro ao carregar produtos';
+      setError(errorMessage);
+      
+      toast({
+        title: 'Erro ao carregar produtos',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    }
+  }, [produtosData, isLoadingProdutos, produtosError]);
 
   const fetchProdutos = async () => {
     try {
@@ -229,8 +276,8 @@ export default function ProdutosPage() {
         });
       }
       
-      // Recarregar produtos
-      fetchProdutos();
+      // Invalidar e recarregar dados com React Query
+      queryClient.invalidateQueries({queryKey: ['/api/products']});
       setFormOpen(false);
     } catch (err: any) {
       console.error('Erro ao salvar produto:', err);
@@ -252,8 +299,8 @@ export default function ProdutosPage() {
         title: 'Produto excluído',
         description: 'O produto foi excluído com sucesso!',
       });
-      // Recarregar produtos
-      fetchProdutos();
+      // Invalidar e recarregar dados com React Query
+      queryClient.invalidateQueries({queryKey: ['/api/products']});
     } catch (err: any) {
       console.error('Erro ao excluir produto:', err);
       toast({
