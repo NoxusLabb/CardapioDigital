@@ -318,10 +318,25 @@ export default function ProdutosPage() {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <h1 className="text-2xl font-bold">Produtos</h1>
-          <Button onClick={handleCreateNew}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Novo Produto
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button 
+              onClick={() => refetchProdutos()} 
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38" />
+              </svg>
+              Atualizar
+            </Button>
+            <Button 
+              onClick={handleCreateNew}
+              className="bg-primary hover:bg-primary/90"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Adicionar Produto
+            </Button>
+          </div>
         </div>
 
         {error && (
@@ -448,18 +463,35 @@ export default function ProdutosPage() {
               </div>
             </DialogContent>
             
-            <DialogFooter>
-              <Button variant="outline" onClick={handleViewClose}>
-                Fechar
-              </Button>
-              <Button 
-                onClick={() => {
-                  handleViewClose();
-                  handleEdit(viewingProduto);
-                }}
-              >
-                Editar
-              </Button>
+            <DialogFooter className="flex justify-between items-center">
+              <div>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => {
+                    if (window.confirm(`Tem certeza que deseja excluir o produto "${viewingProduto.nome}"?`)) {
+                      const id = viewingProduto._id || String(viewingProduto.id);
+                      handleDelete(id);
+                      handleViewClose();
+                    }
+                  }}
+                >
+                  Excluir
+                </Button>
+              </div>
+              <div className="flex space-x-2">
+                <Button variant="outline" onClick={handleViewClose}>
+                  Fechar
+                </Button>
+                <Button 
+                  onClick={() => {
+                    handleViewClose();
+                    handleEdit(viewingProduto);
+                  }}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Editar
+                </Button>
+              </div>
             </DialogFooter>
           </>
         )}
