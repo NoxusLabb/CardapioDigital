@@ -65,12 +65,14 @@ export default function FeaturedItems({ items }: FeaturedItemsProps) {
               </div>
               <div className="h-40 bg-gray-200 relative">
                 <img
-                  src={item.imageUrl}
+                  src={item.imageUrl || 'https://via.placeholder.com/400x300?text=Imagem+Indisponível'}
                   alt={item.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = 'https://via.placeholder.com/400x300?text=Imagem+Indisponível';
+                    // Prevenir loop infinito
+                    target.onerror = null;
                   }}
                 />
               </div>
