@@ -138,7 +138,7 @@ export default function ProdutosTable({
       }).filter(Boolean); // Filtrar itens null
       
       console.log("Produtos formatados:", formatados);
-      setProdutosFormatados(formatados);
+      setProdutosFormatados(formatados as ProdutoUI[]);
     } else {
       console.log("Nenhum produto recebido");
       setProdutosFormatados([]);
@@ -285,11 +285,13 @@ export default function ProdutosTable({
                 <TableRow key={produto._id || produto.id}>
                   <TableCell>
                     <img
-                      src={produto.imagemUrl}
+                      src={produto.imagemUrl || 'https://via.placeholder.com/50x50?text=Sem+Imagem'}
                       alt={produto.nome}
                       className="h-12 w-12 rounded-md object-cover"
                       onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                         e.currentTarget.src = 'https://via.placeholder.com/50x50?text=Erro';
+                        // Prevenir loop infinito
+                        e.currentTarget.onerror = null;
                       }}
                     />
                   </TableCell>

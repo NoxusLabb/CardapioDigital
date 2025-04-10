@@ -13,11 +13,10 @@ api.interceptors.request.use((config) => {
     if (userInfo) {
       try {
         const token = JSON.parse(userInfo).token;
-        // Garantir que headers existe
-        if (!config.headers) {
-          config.headers = {};
-        }
-        config.headers.Authorization = `Bearer ${token}`;
+        config.headers = {
+          ...config.headers,
+          'Authorization': `Bearer ${token}`
+        };
       } catch (e) {
         console.error('Erro ao processar token:', e);
       }
