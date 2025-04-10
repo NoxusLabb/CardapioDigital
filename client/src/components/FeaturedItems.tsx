@@ -68,11 +68,16 @@ export default function FeaturedItems({ items }: FeaturedItemsProps) {
                   src={item.imageUrl || 'https://via.placeholder.com/400x300?text=Imagem+Indisponível'}
                   alt={item.name}
                   className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                  style={{ minHeight: '100%', backgroundColor: '#f3f4f6' }}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = 'https://via.placeholder.com/400x300?text=Imagem+Indisponível';
                     // Prevenir loop infinito
                     target.onerror = null;
+                    // Adicionar classe para evitar piscar
+                    target.classList.add('image-loaded');
                   }}
                 />
               </div>
