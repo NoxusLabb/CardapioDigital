@@ -2,6 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilo para evitar piscar imagens */
+img {
+  transition: opacity 0.3s ease-in-out;
+}
+
+img.image-loaded {
+  opacity: 1 !important;
+}
+
+.bg-gray-200 {
+  position: relative;
+}
+
+.bg-gray-200::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #f3f4f6;
+  z-index: 0;
+}
+
+.bg-gray-200 img {
+  position: relative;
+  z-index: 1;
+}
+
 @layer utilities {
   .hide-scrollbar::-webkit-scrollbar {
     display: none;

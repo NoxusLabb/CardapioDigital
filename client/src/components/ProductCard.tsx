@@ -30,12 +30,17 @@ export default function ProductCard({ product }: ProductCardProps) {
           src={product.imageUrl || 'https://via.placeholder.com/400x300?text=Imagem+Indisponível'}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+          loading="lazy"
+          decoding="async"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = 'https://via.placeholder.com/400x300?text=Imagem+Indisponível';
             // Prevenir loop infinito
             target.onerror = null;
+            // Adicionar classe para evitar piscar
+            target.classList.add('image-loaded');
           }}
+          style={{ minHeight: '100%', backgroundColor: '#f3f4f6' }}
         />
         
         {/* Overlay buttons */}
@@ -104,12 +109,17 @@ export default function ProductCard({ product }: ProductCardProps) {
                 src={product.imageUrl || 'https://via.placeholder.com/400x300?text=Imagem+Indisponível'}
                 alt={product.name}
                 className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = 'https://via.placeholder.com/400x300?text=Imagem+Indisponível';
                   // Prevenir loop infinito
                   target.onerror = null;
+                  // Adicionar classe para evitar piscar
+                  target.classList.add('image-loaded');
                 }}
+                style={{ minHeight: '100%', backgroundColor: '#f3f4f6' }}
               />
             </div>
             
